@@ -9,6 +9,7 @@ export const GLASS_LABELS: Record<GlassType, string> = {
   pilsner: "Pilsner",
   mug: "Mug",
   weizen: "Weizen",
+  ipa: "IPA Glass",
 };
 
 type GlassDef = {
@@ -23,22 +24,29 @@ type GlassDef = {
 const GLASSES: Record<GlassType, GlassDef> = {
   pint: {
     // American shaker: gently tapered, wider at the mouth.
-    body: "M20 8 C22 32 24 60 26 88 L38 88 C40 60 42 32 44 8 Z",
-    foamRx: 11,
+    body: "M20 8 C21 34 22 60 24 88 L40 88 C42 60 43 34 44 8 Z",
+    foamRx: 12,
   },
   tulip: {
-    // Bulbous body, pinched waist, flared lip, stem and foot.
-    body: "M22 8 C17 18 15 30 17 42 C19 56 25 66 28 74 L28 80 L23 88 L41 88 L37 80 L37 74 C40 66 46 56 48 42 C50 30 48 18 43 8 C36 12 29 12 22 8 Z",
-    foamRx: 10,
+    // Footed glass: bulbous bowl, pinched waist, softly flared lip.
+    body:
+      "M21 9 C25 10 28 11 32 11 C36 11 39 10 43 9 " +
+      "C41 16 41 20 42 25 C47 33 49 41 47 49 C45 59 39 65 34 67 " +
+      "L34 83 L42 89 L22 89 L30 83 L30 67 " +
+      "C25 65 19 59 17 49 C15 41 17 33 22 25 C23 20 23 16 21 9 Z",
+    foamRx: 11,
   },
   snifter: {
-    // Short stem, wide bowl, narrow mouth to trap aroma.
-    body: "M23 20 C14 28 12 44 16 57 C19 66 24 71 28 73 L28 80 L22 88 L42 88 L36 80 L36 73 C40 71 45 66 48 57 C52 44 50 28 41 20 C35 17 29 17 23 20 Z",
-    foamRx: 8,
+    // Squat balloon bowl and narrow mouth to trap aroma, short stem.
+    body:
+      "M25 14 C18 22 12 32 12 42 C12 54 20 62 27 64 " +
+      "L27 77 L21 87 L43 87 L37 77 L37 64 " +
+      "C44 62 52 54 52 42 C52 32 46 22 39 14 C34 16 30 16 25 14 Z",
+    foamRx: 9,
   },
   pilsner: {
-    // Tall flute: narrow foot flaring to a wide mouth.
-    body: "M19 6 C25 24 28 44 28 62 L28 78 L24 88 L40 88 L36 78 L36 62 C36 44 39 24 45 6 C36 10 28 10 19 6 Z",
+    // Straight trumpet flute on a small foot.
+    body: "M14 6 L50 6 L37 62 L37 79 L42 87 L22 87 L27 79 L27 62 Z",
     foamRx: 12,
   },
   mug: {
@@ -58,8 +66,20 @@ const GLASSES: Record<GlassType, GlassDef> = {
   },
   weizen: {
     // Tall wheat glass: narrow base, gentle S-curve to a wide mouth.
-    body: "M17 6 C23 22 26 40 27 58 L27 80 L24 88 L40 88 L37 80 L37 58 C38 40 41 22 47 6 C37 10 27 10 17 6 Z",
-    foamRx: 14,
+    body:
+      "M15 5 C20 22 23 36 24 50 C25 64 26 76 25 88 L39 88 " +
+      "C38 76 39 64 40 50 C41 36 44 22 49 5 C39 9 25 9 15 5 Z",
+    foamRx: 13,
+  },
+  ipa: {
+    // Spiegelau-style: footed, with ridged double-bulb bowl and flared rim.
+    body:
+      "M18 8 C21 10 23 12 24 16 C20 20 18 24 19 28 C20 33 24 36 26 40 " +
+      "C24 44 20 48 19 52 C18 57 22 60 26 62 L29 62 L29 77 L22 87 " +
+      "L42 87 L35 77 L35 62 L38 62 C42 60 46 57 45 52 C44 48 40 44 38 40 " +
+      "C40 36 44 33 45 28 C46 24 44 20 40 16 C41 12 43 10 46 8 " +
+      "C38 11 26 11 18 8 Z",
+    foamRx: 11,
   },
 };
 

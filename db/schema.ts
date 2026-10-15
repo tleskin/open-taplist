@@ -18,6 +18,7 @@ export const GLASS_TYPES = [
   "pilsner",
   "mug",
   "weizen",
+  "ipa",
 ] as const;
 export type GlassType = (typeof GLASS_TYPES)[number];
 

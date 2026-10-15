@@ -14,7 +14,7 @@ const sampleBeers: NewBeer[] = [
     isActive: true,
     status: "on_tap",
     srm: 6,
-    glass: "pint",
+    glass: "ipa",
   },
   {
     name: "Amber Waves",
