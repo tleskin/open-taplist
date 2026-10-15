@@ -14,6 +14,7 @@ import BeerManager from "./BeerManager";
 import ThemePicker from "./ThemePicker";
 import BrewerySettings from "./BrewerySettings";
 import ThemeMaker from "./ThemeMaker";
+import AdminTabs from "./AdminTabs";
 
 export const metadata: Metadata = {
   title: "Admin · OpenTapList",
@@ -59,10 +60,12 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <header className="border-b border-zinc-800 bg-zinc-900/60 px-6 py-6 sm:px-10">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-400">
-          OpenTapList
-        </p>
-        <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+        <img
+          src="/logo-lockup-dark.png"
+          alt="OpenTaplist"
+          className="h-12 w-auto"
+        />
+        <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
           Manage taps
         </h1>
         <a
@@ -74,14 +77,26 @@ export default async function AdminPage() {
       </header>
 
       <main className="mx-auto max-w-5xl space-y-8 px-6 py-8 sm:px-10">
-        <BrewerySettings initialName={breweryName} initialLogo={breweryLogo} />
-        <ThemePicker
-          initialThemeRef={themeRef}
-          customThemes={customThemes}
-          breweryName={breweryName}
+        <AdminTabs
+          beers={<BeerManager initialBeers={allBeers} />}
+          settings={
+            <>
+              <BrewerySettings
+                initialName={breweryName}
+                initialLogo={breweryLogo}
+              />
+              <ThemePicker
+                initialThemeRef={themeRef}
+                customThemes={customThemes}
+                breweryName={breweryName}
+              />
+              <ThemeMaker
+                initialThemes={customThemes}
+                activeThemeRef={themeRef}
+              />
+            </>
+          }
         />
-        <ThemeMaker initialThemes={customThemes} activeThemeRef={themeRef} />
-        <BeerManager initialBeers={allBeers} />
       </main>
     </div>
   );

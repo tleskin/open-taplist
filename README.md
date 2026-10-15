@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/logo-lockup-dark.png" />
+  <img src="public/logo-lockup-light.png" alt="OpenTaplist" width="360" />
+</picture>
+
 # OpenTapList
 
 An open-source tap list display for homebrewers. Put it on a TV in the garage,
