@@ -7,6 +7,7 @@ import { getSetting } from "@/lib/settings";
 import { isThemeId, type ThemeId } from "@/lib/themes";
 import BeerManager from "./BeerManager";
 import ThemePicker from "./ThemePicker";
+import BrewerySettings from "./BrewerySettings";
 
 export const metadata: Metadata = {
   title: "Admin · OpenTapList",
@@ -27,6 +28,13 @@ export default async function AdminPage() {
   const storedTheme = await getSetting("theme");
   const theme: ThemeId = isThemeId(storedTheme) ? storedTheme : "midnight";
 
+  const storedName = await getSetting("brewery_name");
+  const breweryName =
+    storedName ??
+    process.env.NEXT_PUBLIC_BREWERY_NAME ??
+    "My Home Brewery";
+  const breweryLogo = await getSetting("brewery_logo");
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <header className="border-b border-zinc-800 bg-zinc-900/60 px-6 py-6 sm:px-10">
@@ -45,6 +53,7 @@ export default async function AdminPage() {
       </header>
 
       <main className="mx-auto max-w-5xl space-y-8 px-6 py-8 sm:px-10">
+        <BrewerySettings initialName={breweryName} initialLogo={breweryLogo} />
         <ThemePicker initialTheme={theme} />
         <BeerManager initialBeers={allBeers} />
       </main>

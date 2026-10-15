@@ -17,7 +17,8 @@ type ApiBeer = Omit<Beer, "createdAt" | "updatedAt"> & {
   updatedAt: string;
 };
 
-const BREWERY_NAME = process.env.NEXT_PUBLIC_BREWERY_NAME ?? "My Home Brewery";
+const DEFAULT_BREWERY_NAME =
+  process.env.NEXT_PUBLIC_BREWERY_NAME ?? "My Home Brewery";
 const POLL_INTERVAL_MS = 30_000;
 
 function ClockIcon({ className }: { className?: string }) {
@@ -70,6 +71,8 @@ function BeerStats({ beer, t }: { beer: ApiBeer; t: ThemeStyles }) {
 export default function TapListPage() {
   const [beers, setBeers] = useState<ApiBeer[] | null>(null);
   const [themeId, setThemeId] = useState<ThemeId>("midnight");
+  const [breweryName, setBreweryName] = useState(DEFAULT_BREWERY_NAME);
+  const [breweryLogo, setBreweryLogo] = useState<string | null>(null);
   const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
@@ -82,6 +85,12 @@ export default function TapListPage() {
       setBeers(await beersRes.json());
       const settings = await settingsRes.json();
       if (isThemeId(settings.theme)) setThemeId(settings.theme);
+      if (typeof settings.breweryName === "string" && settings.breweryName) {
+        setBreweryName(settings.breweryName);
+      }
+      setBreweryLogo(
+        typeof settings.breweryLogo === "string" ? settings.breweryLogo : null
+      );
       setError(false);
     } catch {
       setError(true);
@@ -114,8 +123,17 @@ export default function TapListPage() {
       )}
 
       <header className={`relative ${t.header}`}>
-        <p className={t.kicker}>Now pouring</p>
-        <h1 className={t.title}>{BREWERY_NAME}</h1>
+        <div className="mx-auto max-w-3xl text-center">
+          {breweryLogo && (
+            <img
+              src={breweryLogo}
+              alt={`${breweryName} logo`}
+              className="mx-auto mb-4 h-28 w-auto max-w-full object-contain sm:h-32"
+            />
+          )}
+          <p className={t.kicker}>Now pouring</p>
+          <h1 className={t.title}>{breweryName}</h1>
+        </div>
       </header>
 
       <main className="relative mx-auto max-w-6xl space-y-12 px-6 py-8 sm:px-10">
