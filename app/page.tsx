@@ -275,7 +275,8 @@ export default function TapListPage() {
       </main>
 
       <footer className={`relative ${t.footer}`}>
-        OpenTapList · refreshes automatically
+        <p>© {new Date().getFullYear()} OpenTaplist · Brewed with love 🍻</p>
+        <p className="mt-1 opacity-70">Refreshes automatically</p>
       </footer>
     </div>
   );
