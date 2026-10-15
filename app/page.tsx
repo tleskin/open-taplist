@@ -252,6 +252,11 @@ export default function TapListPage() {
                   {t.cardShine && (
                     <div aria-hidden className={t.cardShine} />
                   )}
+                  <BeerGlass
+                    glass={beer.glass}
+                    srm={beer.srm}
+                    className="h-24 w-auto shrink-0 opacity-40"
+                  />
                   <div className="relative min-w-0">
                     <h3 className="text-2xl font-bold leading-tight">
                       {beer.name}
