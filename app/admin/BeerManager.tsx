@@ -84,7 +84,7 @@ const inputClass =
   "w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none";
 const labelClass = "mb-1 block text-sm font-medium text-zinc-300";
 
-const LABEL_MAX_BYTES = 2 * 1024 * 1024;
+const LABEL_MAX_BYTES = 10 * 1024 * 1024;
 const LABEL_MAX_DIM = 512;
 
 /**
@@ -182,7 +182,7 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
       return;
     }
     if (file.size > LABEL_MAX_BYTES) {
-      setFormError("Image must be under 2MB.");
+      setFormError("Image must be under 10MB.");
       return;
     }
     try {
