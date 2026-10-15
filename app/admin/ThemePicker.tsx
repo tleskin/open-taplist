@@ -19,15 +19,16 @@ type PickableTheme = {
 };
 
 export default function ThemePicker({
-  initialThemeRef,
+  themeRef,
+  onThemeChange,
   customThemes,
   breweryName,
 }: {
-  initialThemeRef: string;
+  themeRef: string;
+  onThemeChange: (ref: string) => void;
   customThemes: CustomThemeParams[];
   breweryName: string;
 }) {
-  const [themeRef, setThemeRef] = useState(initialThemeRef);
   const [previewRef, setPreviewRef] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -59,7 +60,7 @@ export default function ThemePicker({
           body: JSON.stringify({ theme: next }),
         });
         if (!res.ok) throw new Error("Couldn't save the theme.");
-        setThemeRef(next);
+        onThemeChange(next);
         setSaved(true);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong.");

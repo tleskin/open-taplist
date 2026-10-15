@@ -11,9 +11,8 @@ import {
   type CustomThemeParams,
 } from "@/lib/themes";
 import BeerManager from "./BeerManager";
-import ThemePicker from "./ThemePicker";
 import BrewerySettings from "./BrewerySettings";
-import ThemeMaker from "./ThemeMaker";
+import ThemeSettings from "./ThemeSettings";
 import AdminTabs from "./AdminTabs";
 
 export const metadata: Metadata = {
@@ -85,14 +84,10 @@ export default async function AdminPage() {
                 initialName={breweryName}
                 initialLogo={breweryLogo}
               />
-              <ThemePicker
-                initialThemeRef={themeRef}
-                customThemes={customThemes}
-                breweryName={breweryName}
-              />
-              <ThemeMaker
+              <ThemeSettings
                 initialThemes={customThemes}
-                activeThemeRef={themeRef}
+                initialThemeRef={themeRef}
+                breweryName={breweryName}
               />
             </>
           }

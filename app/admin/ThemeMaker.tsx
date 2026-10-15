@@ -111,13 +111,16 @@ function ThemePreview({ draft }: { draft: Omit<CustomThemeParams, "id"> }) {
 }
 
 export default function ThemeMaker({
-  initialThemes,
+  themes,
+  onThemesChange,
   activeThemeRef,
+  onActiveThemeChange,
 }: {
-  initialThemes: CustomThemeParams[];
+  themes: CustomThemeParams[];
+  onThemesChange: (themes: CustomThemeParams[]) => void;
   activeThemeRef: string;
+  onActiveThemeChange: (ref: string) => void;
 }) {
-  const [themes, setThemes] = useState<CustomThemeParams[]>(initialThemes);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] =
     useState<Omit<CustomThemeParams, "id">>(DEFAULT_DRAFT);
@@ -169,7 +172,10 @@ export default function ThemeMaker({
             typeof data.error === "string" ? data.error : "Couldn't save."
           );
         }
-        setThemes(next);
+        onThemesChange(next);
+        if (extra?.theme === "midnight") {
+          onActiveThemeChange("midnight");
+        }
         setEditingId(null);
         setSaved(true);
       } catch (err) {
