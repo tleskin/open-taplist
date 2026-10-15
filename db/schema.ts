@@ -34,6 +34,7 @@ export const beers = pgTable("beers", {
   status: text("status").notNull().default("on_tap").$type<BeerStatus>(),
   srm: real("srm"),
   glass: text("glass").notNull().default("pint").$type<GlassType>(),
+  labelImage: text("label_image"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

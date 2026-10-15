@@ -21,7 +21,18 @@ export type BeerInput = {
   status: BeerStatus;
   srm: number | null;
   glass: GlassType;
+  labelImage: string | null;
 };
+
+const MAX_IMAGE_LENGTH = 2_800_000; // ~2MB image as a data URL
+
+function isImageValue(v: unknown): v is string {
+  return (
+    typeof v === "string" &&
+    v.startsWith("data:image/") &&
+    v.length <= MAX_IMAGE_LENGTH
+  );
+}
 
 function validate(input: BeerInput) {
   if (!input.name.trim()) throw new Error("Name is required.");
@@ -46,6 +57,9 @@ function validate(input: BeerInput) {
   }
   if (!(GLASS_TYPES as readonly string[]).includes(input.glass)) {
     throw new Error("Unknown glass type.");
+  }
+  if (input.labelImage !== null && !isImageValue(input.labelImage)) {
+    throw new Error("Label image must be an image under ~2MB.");
   }
   if (input.status === "on_tap") {
     if (!Number.isInteger(input.tapNumber) || input.tapNumber < 1) {
@@ -74,6 +88,7 @@ export async function createBeer(input: BeerInput) {
     status: input.status,
     srm: input.srm,
     glass: input.glass,
+    labelImage: input.labelImage,
   });
   refresh();
 }
@@ -93,6 +108,7 @@ export async function updateBeer(id: number, input: BeerInput) {
       status: input.status,
       srm: input.srm,
       glass: input.glass,
+      labelImage: input.labelImage,
       updatedAt: new Date(),
     })
     .where(eq(beers.id, id));

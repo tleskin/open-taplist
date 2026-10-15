@@ -55,8 +55,31 @@ function SectionHeader({
   );
 }
 
-function BeerStats({ beer, t }: { beer: ApiBeer; t: ThemeStyles }) {
+/**
+ * The beer's visual on a card: its label image when one is saved,
+ * otherwise the SRM-colored glass. Ghosted for beers not poured yet.
+ */
+function BeerVisual({ beer, ghost }: { beer: ApiBeer; ghost?: boolean }) {
+  const ghostCls = ghost ? "opacity-40" : "";
+  if (beer.labelImage) {
+    return (
+      <img
+        src={beer.labelImage}
+        alt={`${beer.name} label`}
+        className={`h-24 w-24 shrink-0 rounded-2xl object-cover ${ghostCls}`}
+      />
+    );
+  }
   return (
+    <BeerGlass
+      glass={beer.glass}
+      srm={beer.srm}
+      className={`h-24 w-auto shrink-0 ${ghostCls}`}
+    />
+  );
+}
+
+function BeerStats({ beer, t }: { beer: ApiBeer; t: ThemeStyles }) {  return (
     <p className={t.statText}>
       <span className={t.statValue}>{beer.abv.toFixed(1)}% ABV</span>
       {beer.ibu !== null && (
@@ -188,11 +211,7 @@ export default function TapListPage() {
                     <div aria-hidden className={t.cardShine} />
                   )}
                   <div className={t.tapBadge}>{beer.tapNumber}</div>
-                  <BeerGlass
-                    glass={beer.glass}
-                    srm={beer.srm}
-                    className="h-24 w-auto shrink-0"
-                  />
+                  <BeerVisual beer={beer} />
                   <div className="relative min-w-0">
                     <h3 className="text-2xl font-bold leading-tight">
                       {beer.name}
@@ -257,11 +276,7 @@ export default function TapListPage() {
                   {t.cardShine && (
                     <div aria-hidden className={t.cardShine} />
                   )}
-                  <BeerGlass
-                    glass={beer.glass}
-                    srm={beer.srm}
-                    className="h-24 w-auto shrink-0 opacity-40"
-                  />
+                  <BeerVisual beer={beer} ghost />
                   <div className="relative min-w-0">
                     <h3 className="text-2xl font-bold leading-tight">
                       {beer.name}

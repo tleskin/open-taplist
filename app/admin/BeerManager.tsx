@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   BEER_STATUSES,
   GLASS_TYPES,
@@ -34,6 +34,7 @@ type FormState = {
   status: BeerStatus;
   srm: string;
   glass: GlassType;
+  labelImage: string | null;
 };
 
 const emptyForm: FormState = {
@@ -46,6 +47,7 @@ const emptyForm: FormState = {
   status: "on_tap",
   srm: "",
   glass: "pint",
+  labelImage: null,
 };
 
 function toForm(beer: Beer): FormState {
@@ -59,6 +61,7 @@ function toForm(beer: Beer): FormState {
     status: beer.status,
     srm: beer.srm === null ? "" : String(beer.srm),
     glass: beer.glass,
+    labelImage: beer.labelImage ?? null,
   };
 }
 
@@ -73,6 +76,7 @@ function toInput(form: FormState): BeerInput {
     status: form.status,
     srm: form.srm.trim() === "" ? null : Number(form.srm),
     glass: form.glass,
+    labelImage: form.labelImage,
   };
 }
 
@@ -80,12 +84,51 @@ const inputClass =
   "w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none";
 const labelClass = "mb-1 block text-sm font-medium text-zinc-300";
 
+const LABEL_MAX_BYTES = 2 * 1024 * 1024;
+const LABEL_MAX_DIM = 512;
+
+/**
+ * Downscale an uploaded label to a max 512px JPEG data URL — plenty for the
+ * 96px display slot, and keeps server-action payloads small.
+ */
+function fileToLabelDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(
+        1,
+        LABEL_MAX_DIM / Math.max(img.width, img.height)
+      );
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Couldn't process that image."));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Couldn't read that file."));
+    };
+    img.src = url;
+  });
+}
+
 export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const labelFileRef = useRef<HTMLInputElement>(null);
 
   function startAdd() {
     setEditingId(null);
@@ -128,6 +171,29 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
         setFormError(err instanceof Error ? err.message : "Something went wrong.");
       }
     });
+  }
+
+  async function onLabelFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setFormError("Pick an image file (PNG or JPG).");
+      return;
+    }
+    if (file.size > LABEL_MAX_BYTES) {
+      setFormError("Image must be under 2MB.");
+      return;
+    }
+    try {
+      const dataUrl = await fileToLabelDataUrl(file);
+      setFormError(null);
+      set("labelImage", dataUrl);
+    } catch (err) {
+      setFormError(
+        err instanceof Error ? err.message : "Couldn't read that file."
+      );
+    }
   }
 
   async function onDelete(id: number, name: string) {
@@ -181,7 +247,18 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
                 <td className="px-4 py-3 font-bold text-amber-400">
                   {beer.status === "on_tap" ? beer.tapNumber : "—"}
                 </td>
-                <td className="px-4 py-3 font-semibold">{beer.name}</td>
+                <td className="px-4 py-3 font-semibold">
+                  <span className="flex items-center gap-2">
+                    {beer.labelImage && (
+                      <img
+                        src={beer.labelImage}
+                        alt=""
+                        className="h-8 w-8 shrink-0 rounded-lg object-cover"
+                      />
+                    )}
+                    {beer.name}
+                  </span>
+                </td>
                 <td className="px-4 py-3 text-zinc-400">{beer.style}</td>
                 <td className="px-4 py-3">
                   <span
@@ -387,6 +464,51 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
                   </option>
                 ))}
               </select>
+            </div>
+            <div>
+              <span className={labelClass}>Label image (optional)</span>
+              <div className="mt-1 flex items-center gap-3">
+                {form.labelImage ? (
+                  <img
+                    src={form.labelImage}
+                    alt="Beer label preview"
+                    className="h-20 w-20 shrink-0 rounded-xl object-cover"
+                  />
+                ) : (
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-zinc-700 text-xs text-zinc-500">
+                    No label
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => labelFileRef.current?.click()}
+                    className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm font-semibold text-zinc-300 hover:border-zinc-500"
+                  >
+                    {form.labelImage ? "Replace" : "Upload"}
+                  </button>
+                  {form.labelImage && (
+                    <button
+                      type="button"
+                      onClick={() => set("labelImage", null)}
+                      className="rounded-lg border border-red-500/50 px-3 py-1.5 text-sm font-semibold text-red-300 hover:bg-red-500/10"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <input
+                  ref={labelFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={onLabelFileChange}
+                />
+              </div>
+              <p className="mt-1 text-xs text-zinc-500">
+                Shown instead of the glass on the tap list. Resized to max
+                512px.
+              </p>
             </div>
             <div className="sm:col-span-2">
               <label className={labelClass} htmlFor="description">

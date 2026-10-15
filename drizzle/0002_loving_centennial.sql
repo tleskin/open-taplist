@@ -1,0 +1,1 @@
+ALTER TABLE "beers" ADD COLUMN "label_image" text;
