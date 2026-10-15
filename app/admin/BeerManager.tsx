@@ -145,6 +145,15 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
     setFormOpen(true);
   }
 
+  function startClone(beer: Beer) {
+    setEditingId(null);
+    // Copy everything into a fresh add form; the tap number is left blank
+    // so a new one must be chosen deliberately.
+    setForm({ ...toForm(beer), tapNumber: "" });
+    setFormError(null);
+    setFormOpen(true);
+  }
+
   function cancel() {
     setEditingId(null);
     setForm(emptyForm);
@@ -466,8 +475,9 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
         )}
       </section>
 
-      <section className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900/70">
-        <table className="w-full min-w-[860px] text-left text-sm">
+      {!showForm && (
+        <section className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900/70">
+          <table className="w-full min-w-[860px] text-left text-sm">
           <thead>
             <tr className="border-b border-zinc-800 text-xs uppercase tracking-widest text-zinc-500">
               <th className="px-4 py-3">Tap</th>
@@ -560,6 +570,14 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
                   <button
                     type="button"
                     disabled={isPending}
+                    onClick={() => startClone(beer)}
+                    className="mr-2 rounded-lg border border-zinc-700 px-3 py-1 text-xs font-semibold text-zinc-200 hover:border-sky-500"
+                  >
+                    Clone
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isPending}
                     onClick={() => startEdit(beer)}
                     className="mr-2 rounded-lg border border-zinc-700 px-3 py-1 text-xs font-semibold text-zinc-200 hover:border-amber-500"
                   >
@@ -578,7 +596,8 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
             ))}
           </tbody>
         </table>
-      </section>
+        </section>
+      )}
     </div>
   );
 }
