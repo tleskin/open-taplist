@@ -218,120 +218,6 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
 
   return (
     <div className="space-y-8">
-      <section className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900/70">
-        <table className="w-full min-w-[860px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-zinc-800 text-xs uppercase tracking-widest text-zinc-500">
-              <th className="px-4 py-3">Tap</th>
-              <th className="px-4 py-3">Beer</th>
-              <th className="px-4 py-3">Style</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">SRM</th>
-              <th className="px-4 py-3">ABV</th>
-              <th className="px-4 py-3">IBU</th>
-              <th className="px-4 py-3">Active</th>
-              <th className="px-4 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {initialBeers.length === 0 && (
-              <tr>
-                <td colSpan={9} className="px-4 py-10 text-center text-zinc-500">
-                  No beers yet — add your first one below.
-                </td>
-              </tr>
-            )}
-            {initialBeers.map((beer) => (
-              <tr
-                key={beer.id}
-                className={`border-b border-zinc-800/60 last:border-0 ${
-                  beer.isActive ? "" : "opacity-50"
-                }`}
-              >
-                <td className="px-4 py-3 font-bold text-amber-400">
-                  {beer.status === "on_tap" ? beer.tapNumber : "—"}
-                </td>
-                <td className="px-4 py-3 font-semibold">
-                  <span className="flex items-center gap-2">
-                    {beer.labelImage && (
-                      <img
-                        src={beer.labelImage}
-                        alt=""
-                        className="h-8 w-8 shrink-0 rounded-lg object-cover"
-                      />
-                    )}
-                    {beer.name}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-zinc-400">{beer.style}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
-                      beer.status === "on_tap"
-                        ? "bg-amber-500/15 text-amber-300"
-                        : beer.status === "fermenting"
-                          ? "bg-sky-500/15 text-sky-300"
-                          : "bg-violet-500/15 text-violet-300"
-                    }`}
-                  >
-                    {STATUS_LABELS[beer.status]}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className="flex items-center gap-2 text-zinc-400">
-                    <span
-                      className="inline-block h-4 w-4 rounded-full border border-white/20"
-                      style={{ backgroundColor: srmToHex(beer.srm) }}
-                      title={beer.srm === null ? "SRM not set" : `${beer.srm} SRM`}
-                    />
-                    {beer.srm ?? "—"}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-zinc-400">
-                  {beer.abv.toFixed(1)}%
-                </td>
-                <td className="px-4 py-3 text-zinc-400">
-                  {beer.ibu ?? "—"}
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => onToggle(beer.id, !beer.isActive)}
-                    title={beer.isActive ? "Hide this beer" : "Show this beer"}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                      beer.isActive
-                        ? "bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/30"
-                        : "bg-zinc-700/40 text-zinc-400 hover:bg-zinc-700/70 hover:text-zinc-200"
-                    }`}
-                  >
-                    {beer.isActive ? "Visible" : "Hidden"}
-                  </button>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => startEdit(beer)}
-                    className="mr-2 rounded-lg border border-zinc-700 px-3 py-1 text-xs font-semibold text-zinc-200 hover:border-amber-500"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => onDelete(beer.id, beer.name)}
-                    className="rounded-lg border border-zinc-700 px-3 py-1 text-xs font-semibold text-red-300 hover:border-red-500"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold">
@@ -578,6 +464,120 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
             change it.
           </p>
         )}
+      </section>
+
+      <section className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900/70">
+        <table className="w-full min-w-[860px] text-left text-sm">
+          <thead>
+            <tr className="border-b border-zinc-800 text-xs uppercase tracking-widest text-zinc-500">
+              <th className="px-4 py-3">Tap</th>
+              <th className="px-4 py-3">Beer</th>
+              <th className="px-4 py-3">Style</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">SRM</th>
+              <th className="px-4 py-3">ABV</th>
+              <th className="px-4 py-3">IBU</th>
+              <th className="px-4 py-3">Active</th>
+              <th className="px-4 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {initialBeers.length === 0 && (
+              <tr>
+                <td colSpan={9} className="px-4 py-10 text-center text-zinc-500">
+                  No beers yet — add your first one below.
+                </td>
+              </tr>
+            )}
+            {initialBeers.map((beer) => (
+              <tr
+                key={beer.id}
+                className={`border-b border-zinc-800/60 last:border-0 ${
+                  beer.isActive ? "" : "opacity-50"
+                }`}
+              >
+                <td className="px-4 py-3 font-bold text-amber-400">
+                  {beer.status === "on_tap" ? beer.tapNumber : "—"}
+                </td>
+                <td className="px-4 py-3 font-semibold">
+                  <span className="flex items-center gap-2">
+                    {beer.labelImage && (
+                      <img
+                        src={beer.labelImage}
+                        alt=""
+                        className="h-8 w-8 shrink-0 rounded-lg object-cover"
+                      />
+                    )}
+                    {beer.name}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-zinc-400">{beer.style}</td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
+                      beer.status === "on_tap"
+                        ? "bg-amber-500/15 text-amber-300"
+                        : beer.status === "fermenting"
+                          ? "bg-sky-500/15 text-sky-300"
+                          : "bg-violet-500/15 text-violet-300"
+                    }`}
+                  >
+                    {STATUS_LABELS[beer.status]}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <span className="flex items-center gap-2 text-zinc-400">
+                    <span
+                      className="inline-block h-4 w-4 rounded-full border border-white/20"
+                      style={{ backgroundColor: srmToHex(beer.srm) }}
+                      title={beer.srm === null ? "SRM not set" : `${beer.srm} SRM`}
+                    />
+                    {beer.srm ?? "—"}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-zinc-400">
+                  {beer.abv.toFixed(1)}%
+                </td>
+                <td className="px-4 py-3 text-zinc-400">
+                  {beer.ibu ?? "—"}
+                </td>
+                <td className="px-4 py-3">
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => onToggle(beer.id, !beer.isActive)}
+                    title={beer.isActive ? "Hide this beer" : "Show this beer"}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      beer.isActive
+                        ? "bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/30"
+                        : "bg-zinc-700/40 text-zinc-400 hover:bg-zinc-700/70 hover:text-zinc-200"
+                    }`}
+                  >
+                    {beer.isActive ? "Visible" : "Hidden"}
+                  </button>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => startEdit(beer)}
+                    className="mr-2 rounded-lg border border-zinc-700 px-3 py-1 text-xs font-semibold text-zinc-200 hover:border-amber-500"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => onDelete(beer.id, beer.name)}
+                    className="rounded-lg border border-zinc-700 px-3 py-1 text-xs font-semibold text-red-300 hover:border-red-500"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
     </div>
   );
