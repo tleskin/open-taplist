@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-taplist}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taplist}
+      POSTGRES_DB: ${POSTGRES_DB:-taplist}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-taplist} -d ${POSTGRES_DB:-taplist}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-taplist}:${POSTGRES_PASSWORD:-taplist}@db:5432/${POSTGRES_DB:-taplist}
+      NEXT_PUBLIC_BREWERY_NAME: ${NEXT_PUBLIC_BREWERY_NAME:-My Home Brewery}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

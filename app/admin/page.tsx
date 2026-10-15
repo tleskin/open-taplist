@@ -1,0 +1,53 @@
+import type { Metadata } from "next";
+import { connection } from "next/server";
+import { asc } from "drizzle-orm";
+import { getDb } from "@/db";
+import { beers } from "@/db/schema";
+import { getSetting } from "@/lib/settings";
+import { isThemeId, type ThemeId } from "@/lib/themes";
+import BeerManager from "./BeerManager";
+import ThemePicker from "./ThemePicker";
+
+export const metadata: Metadata = {
+  title: "Admin · OpenTapList",
+};
+
+// This page reads the live database on every request; opting out of
+// instant-navigation validation (blocking render is fine for an admin UI).
+export const instant = false;
+
+export default async function AdminPage() {
+  await connection(); // skip prerendering: this page reads the live database
+  const db = getDb();
+  const allBeers = await db
+    .select()
+    .from(beers)
+    .orderBy(asc(beers.tapNumber));
+
+  const storedTheme = await getSetting("theme");
+  const theme: ThemeId = isThemeId(storedTheme) ? storedTheme : "midnight";
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <header className="border-b border-zinc-800 bg-zinc-900/60 px-6 py-6 sm:px-10">
+        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-400">
+          OpenTapList
+        </p>
+        <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+          Manage taps
+        </h1>
+        <a
+          href="/"
+          className="mt-2 inline-block text-sm text-zinc-400 underline hover:text-amber-400"
+        >
+          ← Back to tap list
+        </a>
+      </header>
+
+      <main className="mx-auto max-w-5xl space-y-8 px-6 py-8 sm:px-10">
+        <ThemePicker initialTheme={theme} />
+        <BeerManager initialBeers={allBeers} />
+      </main>
+    </div>
+  );
+}
