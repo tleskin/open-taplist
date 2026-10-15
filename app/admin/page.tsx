@@ -75,7 +75,11 @@ export default async function AdminPage() {
 
       <main className="mx-auto max-w-5xl space-y-8 px-6 py-8 sm:px-10">
         <BrewerySettings initialName={breweryName} initialLogo={breweryLogo} />
-        <ThemePicker initialThemeRef={themeRef} customThemes={customThemes} />
+        <ThemePicker
+          initialThemeRef={themeRef}
+          customThemes={customThemes}
+          breweryName={breweryName}
+        />
         <ThemeMaker initialThemes={customThemes} activeThemeRef={themeRef} />
         <BeerManager initialBeers={allBeers} />
       </main>

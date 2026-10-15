@@ -7,6 +7,7 @@ import {
   type CustomThemeParams,
   type ThemeId,
 } from "@/lib/themes";
+import ThemePreviewPane from "./ThemePreviewPane";
 
 const THEME_IDS = Object.keys(THEMES) as ThemeId[];
 
@@ -20,11 +21,14 @@ type PickableTheme = {
 export default function ThemePicker({
   initialThemeRef,
   customThemes,
+  breweryName,
 }: {
   initialThemeRef: string;
   customThemes: CustomThemeParams[];
+  breweryName: string;
 }) {
   const [themeRef, setThemeRef] = useState(initialThemeRef);
+  const [previewRef, setPreviewRef] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -67,8 +71,17 @@ export default function ThemePicker({
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6">
       <h2 className="text-xl font-bold">Display theme</h2>
       <p className="mt-1 text-sm text-zinc-500">
-        Pick the look of the tap list TV display.
+        Pick the look of the tap list TV display. Hover a theme to preview it
+        here — click to make it live.
       </p>
+
+      <div className="mt-4">
+        <ThemePreviewPane
+          themeRef={previewRef ?? themeRef}
+          customThemes={customThemes}
+          breweryName={breweryName}
+        />
+      </div>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         {pickable.map((item) => {
@@ -79,6 +92,10 @@ export default function ThemePicker({
               type="button"
               disabled={isPending}
               onClick={() => pick(item.ref)}
+              onMouseEnter={() => setPreviewRef(item.ref)}
+              onMouseLeave={() => setPreviewRef(null)}
+              onFocus={() => setPreviewRef(item.ref)}
+              onBlur={() => setPreviewRef(null)}
               className={`rounded-2xl border p-5 text-left transition ${
                 active
                   ? "border-amber-500 bg-amber-500/10"
