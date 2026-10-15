@@ -50,9 +50,8 @@ npm run dev
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ftleskin%2Fopen-taplist)
 
-> **Note:** the button above uses the placeholder repo URL
-> `https://github.com/tleskin/open-taplist`. After pushing this project to
-> GitHub, replace `tleskin/open-taplist` with your real repo path.
+> **Note:** the button clones `tleskin/open-taplist`. If you fork the project,
+> update the `repository-url` in the button link above to point at your fork.
 
 When deploying on Vercel, attach a Postgres database for `DATABASE_URL` —
 [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres) or
