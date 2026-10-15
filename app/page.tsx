@@ -143,7 +143,7 @@ export default function TapListPage() {
             />
           )}
           <p className={t.kicker}>Now pouring</p>
-          <h1 className={t.title}>{breweryName}</h1>
+          {!breweryLogo && <h1 className={t.title}>{breweryName}</h1>}
         </div>
       </header>
 

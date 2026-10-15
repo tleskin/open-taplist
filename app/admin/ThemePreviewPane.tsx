@@ -19,10 +19,12 @@ export default function ThemePreviewPane({
   themeRef,
   customThemes,
   breweryName,
+  breweryLogo,
 }: {
   themeRef: string;
   customThemes: CustomThemeParams[];
   breweryName: string;
+  breweryLogo: string | null;
 }) {
   const { styles: t, vars, label } = resolveTheme(themeRef, customThemes);
   const pageCls = t.page.replace("min-h-screen", "").trim();
@@ -56,8 +58,17 @@ export default function ThemePreviewPane({
 
             <div className={`relative ${t.header}`}>
               <div className="mx-auto max-w-3xl text-center">
+                {breweryLogo && (
+                  <img
+                    src={breweryLogo}
+                    alt={`${breweryName} logo`}
+                    className="mx-auto mb-4 h-28 w-auto max-w-full object-contain sm:h-32"
+                  />
+                )}
                 <p className={t.kicker}>Now pouring</p>
-                <h1 className={t.title}>{breweryName}</h1>
+                {!breweryLogo && (
+                  <h1 className={t.title}>{breweryName}</h1>
+                )}
               </div>
             </div>
 

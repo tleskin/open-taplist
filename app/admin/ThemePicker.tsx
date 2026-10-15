@@ -23,11 +23,13 @@ export default function ThemePicker({
   onThemeChange,
   customThemes,
   breweryName,
+  breweryLogo,
 }: {
   themeRef: string;
   onThemeChange: (ref: string) => void;
   customThemes: CustomThemeParams[];
   breweryName: string;
+  breweryLogo: string | null;
 }) {
   const [previewRef, setPreviewRef] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +83,7 @@ export default function ThemePicker({
           themeRef={previewRef ?? themeRef}
           customThemes={customThemes}
           breweryName={breweryName}
+          breweryLogo={breweryLogo}
         />
       </div>
 

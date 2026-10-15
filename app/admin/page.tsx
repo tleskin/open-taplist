@@ -88,6 +88,7 @@ export default async function AdminPage() {
                 initialThemes={customThemes}
                 initialThemeRef={themeRef}
                 breweryName={breweryName}
+                breweryLogo={breweryLogo}
               />
             </>
           }

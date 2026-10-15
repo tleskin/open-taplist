@@ -13,10 +13,12 @@ export default function ThemeSettings({
   initialThemes,
   initialThemeRef,
   breweryName,
+  breweryLogo,
 }: {
   initialThemes: CustomThemeParams[];
   initialThemeRef: string;
   breweryName: string;
+  breweryLogo: string | null;
 }) {
   const [customThemes, setCustomThemes] =
     useState<CustomThemeParams[]>(initialThemes);
@@ -29,6 +31,7 @@ export default function ThemeSettings({
         onThemeChange={setActiveRef}
         customThemes={customThemes}
         breweryName={breweryName}
+        breweryLogo={breweryLogo}
       />
       <ThemeMaker
         themes={customThemes}
