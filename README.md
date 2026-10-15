@@ -1,7 +1,5 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="public/logo-lockup-dark.png" />
-  <img src="public/logo-lockup-light.png" alt="OpenTaplist" width="360" />
-</picture>
+<img src="public/logo-lockup-light.png#gh-light-mode-only" alt="OpenTaplist" width="360" />
+<img src="public/logo-lockup-dark.png#gh-dark-mode-only" alt="OpenTaplist" width="360" />
 
 # OpenTapList
 
