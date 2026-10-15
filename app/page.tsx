@@ -75,6 +75,11 @@ export default function TapListPage() {
   const [breweryName, setBreweryName] = useState(DEFAULT_BREWERY_NAME);
   const [breweryLogo, setBreweryLogo] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  // Computed after mount: reading the clock during prerender is blocked.
+  const [year, setYear] = useState(2026);
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -275,7 +280,7 @@ export default function TapListPage() {
       </main>
 
       <footer className={`relative ${t.footer}`}>
-        <p>© {new Date().getFullYear()} OpenTaplist · Brewed with love 🍻</p>
+        <p>© {year} OpenTaplist · Brewed with love 🍻</p>
         <p className="mt-1 opacity-70">Refreshes automatically</p>
       </footer>
     </div>
