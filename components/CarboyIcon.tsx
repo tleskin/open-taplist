@@ -43,17 +43,17 @@ export default function CarboyIcon({ className, srm }: CarboyIconProps) {
       {/* body */}
       <path d={body} strokeWidth="2.5" fill="rgba(255,255,255,0.04)" />
 
-      {/* fermenting wort, clipped to the body — colored by the beer's SRM */}
+      {/* fermenting wort, clipped to the body — colored by the beer's SRM.
+          Kept nearly opaque so the carboy shows the true beer color. */}
       <g clipPath={`url(#${clipId})`}>
-        <rect x="0" y="50" width="64" height="46" fill={wort} opacity="0.55" />
-        <rect x="0" y="50" width="64" height="10" fill={wort} opacity="0.85" />
+        <rect x="0" y="50" width="64" height="46" fill={wort} opacity="0.9" />
         {/* krausen foam cap */}
-        <ellipse cx="32" cy="50" rx="20" ry="4" fill="#FBF3DC" opacity="0.85" />
+        <ellipse cx="32" cy="50" rx="20" ry="4" fill="#FBF3DC" opacity="0.9" />
         {/* CO2 bubbles */}
-        <circle cx="24" cy="70" r="2.5" fill="#FBF3DC" opacity="0.8" />
-        <circle cx="34" cy="78" r="2" fill="#FBF3DC" opacity="0.7" />
-        <circle cx="40" cy="64" r="3" fill="#FBF3DC" opacity="0.6" />
-        <circle cx="28" cy="58" r="1.8" fill="#FBF3DC" opacity="0.7" />
+        <circle cx="24" cy="70" r="2.5" fill="#FBF3DC" opacity="0.85" />
+        <circle cx="34" cy="78" r="2" fill="#FBF3DC" opacity="0.75" />
+        <circle cx="40" cy="64" r="3" fill="#FBF3DC" opacity="0.65" />
+        <circle cx="28" cy="58" r="1.8" fill="#FBF3DC" opacity="0.75" />
       </g>
 
       {/* shine */}
