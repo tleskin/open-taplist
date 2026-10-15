@@ -212,11 +212,11 @@ export default function TapListPage() {
                   )}
                   <CarboyIcon srm={beer.srm} className="h-24 w-auto shrink-0 opacity-90" />
                   <div className="relative min-w-0">
-                    <h3 className="flex items-center gap-2 text-2xl font-bold leading-tight">
-                      {beer.name}
+                    <h3 className="text-2xl font-bold leading-tight">
+                      {beer.name}{" "}
                       <span
                         title={`~${beer.srm ?? "?"} SRM`}
-                        className="inline-block h-4 w-4 shrink-0 rounded-full border border-white/30"
+                        className="inline-block h-4 w-4 rounded-full border border-white/30 align-middle"
                         style={{ backgroundColor: srmToHex(beer.srm) }}
                       />
                     </h3>
