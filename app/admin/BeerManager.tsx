@@ -217,10 +217,11 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
                     type="button"
                     disabled={isPending}
                     onClick={() => onToggle(beer.id, !beer.isActive)}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    title={beer.isActive ? "Hide this beer" : "Show this beer"}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                       beer.isActive
-                        ? "bg-emerald-500/15 text-emerald-300"
-                        : "bg-zinc-700/40 text-zinc-400"
+                        ? "bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/30"
+                        : "bg-zinc-700/40 text-zinc-400 hover:bg-zinc-700/70 hover:text-zinc-200"
                     }`}
                   >
                     {beer.isActive ? "Visible" : "Hidden"}

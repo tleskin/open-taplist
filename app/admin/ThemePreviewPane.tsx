@@ -46,6 +46,13 @@ export default function ThemePreviewPane({
                 <div className="absolute bottom-0 -left-24 h-96 w-96 rounded-full bg-rose-500/15 blur-[120px]" />
               </div>
             )}
+            {themeRef === "liquid-glass-light" && (
+              <div aria-hidden className="pointer-events-none absolute inset-0">
+                <div className="absolute -top-32 left-1/4 h-96 w-96 rounded-full bg-amber-300/50 blur-[120px]" />
+                <div className="absolute top-1/3 -right-24 h-[28rem] w-[28rem] rounded-full bg-sky-300/50 blur-[130px]" />
+                <div className="absolute bottom-0 -left-24 h-96 w-96 rounded-full bg-rose-300/40 blur-[120px]" />
+              </div>
+            )}
 
             <div className={`relative ${t.header}`}>
               <div className="mx-auto max-w-3xl text-center">

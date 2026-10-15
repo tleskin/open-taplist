@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@layer base {
+  /* Restore the pointer cursor on clickable buttons (Tailwind v4's
+     preflight uses `default`). Disabled buttons keep the default arrow. */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

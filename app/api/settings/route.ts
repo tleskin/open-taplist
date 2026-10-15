@@ -69,7 +69,7 @@ export async function PUT(request: Request) {
       (typeof b.theme === "string" && /^custom:[A-Za-z0-9_-]+$/.test(b.theme));
     if (!themeOk) {
       return Response.json(
-        { error: "theme must be 'midnight', 'liquid-glass', 'daylight', or 'custom:<id>'." },
+        { error: "theme must be 'midnight', 'liquid-glass', 'liquid-glass-light', 'daylight', or 'custom:<id>'." },
         { status: 400 }
       );
     }

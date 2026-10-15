@@ -140,6 +140,15 @@ export default function ThemePicker({
                   </span>
                 )
               )}
+              {!item.custom && item.ref === "liquid-glass-light" && (
+                <span className="mt-3 block h-16 overflow-hidden rounded-xl border border-white/70 bg-gradient-to-br from-sky-100 to-amber-100">
+                  <span className="relative block h-full w-full">
+                    <span className="absolute -top-4 left-4 h-12 w-12 rounded-full bg-amber-300/60 blur-md" />
+                    <span className="absolute top-2 right-6 h-10 w-10 rounded-full bg-sky-300/60 blur-md" />
+                    <span className="absolute inset-x-4 top-4 h-8 rounded-lg border border-white/70 bg-white/60 shadow-sm backdrop-blur-sm" />
+                  </span>
+                </span>
+              )}
               {!item.custom && item.ref === "midnight" && (
                 <span className="mt-3 block h-16 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950">
                   <span className="mx-4 mt-4 block h-8 rounded-lg border border-zinc-700 bg-zinc-800" />

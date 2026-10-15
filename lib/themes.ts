@@ -1,4 +1,8 @@
-export type ThemeId = "midnight" | "liquid-glass" | "daylight";
+export type ThemeId =
+  | "midnight"
+  | "liquid-glass"
+  | "liquid-glass-light"
+  | "daylight";
 
 export const THEMES: Record<
   ThemeId,
@@ -12,9 +16,15 @@ export const THEMES: Record<
   },
   "liquid-glass": {
     id: "liquid-glass",
-    name: "Liquid Glass",
+    name: "Liquid Glass Dark",
     description:
-      "Frosted-glass cards floating over soft color — Apple's glass aesthetic, tuned for the TV.",
+      "Frosted-glass cards floating over deep color — Apple's glass aesthetic, tuned for the TV at night.",
+  },
+  "liquid-glass-light": {
+    id: "liquid-glass-light",
+    name: "Liquid Glass Light",
+    description:
+      "The same frosted-glass look on a bright, airy background — for daytime viewing.",
   },
   daylight: {
     id: "daylight",
@@ -25,7 +35,12 @@ export const THEMES: Record<
 };
 
 export function isThemeId(value: unknown): value is ThemeId {
-  return value === "midnight" || value === "liquid-glass" || value === "daylight";
+  return (
+    value === "midnight" ||
+    value === "liquid-glass" ||
+    value === "liquid-glass-light" ||
+    value === "daylight"
+  );
 }
 
 /* ---------- Custom themes (built in the admin theme maker) ---------- */
@@ -232,6 +247,35 @@ export const themeStyles: Record<ThemeId, ThemeStyles> = {
     emptyBox:
       "rounded-3xl border border-dashed border-white/15 bg-white/[0.04] px-6 py-20 text-center backdrop-blur-md",
     emptyTitle: "text-3xl font-semibold text-white/85",
+  },
+  "liquid-glass-light": {
+    page: "relative min-h-screen overflow-hidden bg-gradient-to-br from-sky-100 via-[#f7f5ef] to-amber-100 text-zinc-900",
+    header:
+      "relative border-b border-white/70 bg-white/40 px-6 py-8 backdrop-blur-xl sm:px-10",
+    kicker: "text-sm font-semibold uppercase tracking-[0.35em] text-zinc-500",
+    title:
+      "mt-2 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-500 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl",
+    sectionTitle: "text-2xl font-semibold tracking-tight text-zinc-900",
+    sectionIconWrap:
+      "flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white/50 text-amber-600 shadow-lg backdrop-blur-md",
+    card: "relative flex gap-5 overflow-hidden rounded-3xl border border-white/70 bg-white/55 p-6 shadow-[0_8px_40px_rgba(60,50,20,0.10)] backdrop-blur-xl",
+    cardShine:
+      "pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/70 to-transparent",
+    tapBadge:
+      "flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-white/70 bg-white/60 text-3xl font-black text-amber-600 shadow-inner backdrop-blur-md",
+    styleText:
+      "mt-1 text-sm font-medium uppercase tracking-[0.2em] text-amber-700/80",
+    statText: "mt-2 text-sm text-zinc-500",
+    statValue: "font-semibold text-zinc-900",
+    bodyText: "mt-2 leading-relaxed text-zinc-600",
+    mutedCard:
+      "relative flex gap-5 overflow-hidden rounded-3xl border border-dashed border-zinc-400/60 bg-white/35 p-6 opacity-80 backdrop-blur-md",
+    footer: "relative px-6 pb-6 text-center text-xs text-zinc-500 sm:px-10",
+    errorBox:
+      "rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-800 backdrop-blur-md",
+    emptyBox:
+      "rounded-3xl border border-dashed border-zinc-400/60 bg-white/35 px-6 py-20 text-center backdrop-blur-md",
+    emptyTitle: "text-3xl font-semibold text-zinc-700",
   },
   daylight: {
     page: "min-h-screen bg-[#faf6ee] text-zinc-900",
