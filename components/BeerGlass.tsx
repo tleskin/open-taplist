@@ -22,41 +22,48 @@ type GlassDef = {
 
 const GLASSES: Record<GlassType, GlassDef> = {
   pint: {
-    body: "M18 6 L46 6 L40 90 L24 90 Z",
-    foamRx: 14,
+    // American shaker: gently tapered, wider at the mouth.
+    body: "M20 8 C22 32 24 60 26 88 L38 88 C40 60 42 32 44 8 Z",
+    foamRx: 11,
   },
   tulip: {
-    body: "M18 6 C20 16 26 20 26 30 C26 48 22 62 26 74 C28 80 30 82 32 82 C34 82 36 80 38 74 C42 62 38 48 38 30 C38 20 44 16 46 6 Z",
-    foamRx: 13,
+    // Bulbous body, pinched waist, flared lip, stem and foot.
+    body: "M22 8 C17 18 15 30 17 42 C19 56 25 66 28 74 L28 80 L23 88 L41 88 L37 80 L37 74 C40 66 46 56 48 42 C50 30 48 18 43 8 C36 12 29 12 22 8 Z",
+    foamRx: 10,
   },
   snifter: {
-    body: "M24 22 C14 30 12 52 18 66 C22 76 27 80 32 80 C37 80 42 76 46 66 C52 52 50 30 40 22 C36 19 28 19 24 22 Z",
-    foamRx: 12,
+    // Short stem, wide bowl, narrow mouth to trap aroma.
+    body: "M23 20 C14 28 12 44 16 57 C19 66 24 71 28 73 L28 80 L22 88 L42 88 L36 80 L36 73 C40 71 45 66 48 57 C52 44 50 28 41 20 C35 17 29 17 23 20 Z",
+    foamRx: 8,
   },
   pilsner: {
-    body: "M26 4 C27 30 26 55 20 90 L44 90 C38 55 37 30 38 4 Z",
+    // Tall flute: narrow foot flaring to a wide mouth.
+    body: "M19 6 C25 24 28 44 28 62 L28 78 L24 88 L40 88 L36 78 L36 62 C36 44 39 24 45 6 C36 10 28 10 19 6 Z",
     foamRx: 12,
   },
   mug: {
-    body: "M16 12 L42 12 L42 88 L16 88 Z",
-    foamRx: 13,
+    // Chunky dimpled mug with a big ear handle.
+    body: "M17 14 L37 14 C39 14 39 16 39 18 L39 82 C39 84 39 86 37 86 L17 86 C15 86 15 84 15 82 L15 18 C15 16 15 14 17 14 Z",
+    foamRx: 10,
     extra: (
       <path
-        d="M42 30 C56 30 56 62 42 62"
+        d="M39 32 C57 32 57 66 39 66"
         fill="none"
-        stroke="rgba(255,255,255,0.35)"
-        strokeWidth="5"
+        stroke="currentColor"
+        strokeOpacity="0.4"
+        strokeWidth="7"
         strokeLinecap="round"
       />
     ),
   },
   weizen: {
-    body: "M26 4 C28 24 24 44 20 62 C18 74 20 84 22 90 L42 90 C44 84 46 74 44 62 C40 44 36 24 38 4 Z",
-    foamRx: 12,
+    // Tall wheat glass: narrow base, gentle S-curve to a wide mouth.
+    body: "M17 6 C23 22 26 40 27 58 L27 80 L24 88 L40 88 L37 80 L37 58 C38 40 41 22 47 6 C37 10 27 10 17 6 Z",
+    foamRx: 14,
   },
 };
 
-const FOAM_Y = 16;
+const FOAM_Y = 15;
 const FOAM_COLOR = "#FBF3DC";
 
 type BeerGlassProps = {
@@ -132,11 +139,12 @@ export default function BeerGlass({ glass, srm, className }: BeerGlassProps) {
 
       {def.extra}
 
-      {/* glass outline */}
+      {/* glass outline — currentColor so it adapts to light/dark themes */}
       <path
         d={def.body}
         fill="none"
-        stroke="rgba(255,255,255,0.35)"
+        stroke="currentColor"
+        strokeOpacity="0.35"
         strokeWidth="2"
         strokeLinejoin="round"
       />

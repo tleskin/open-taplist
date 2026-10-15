@@ -1,16 +1,21 @@
 import { useId } from "react";
+import { srmToHex } from "@/lib/srm";
 
 type CarboyIconProps = {
   className?: string;
+  /** SRM of the fermenting beer — colors the wort. Defaults to amber. */
+  srm?: number | null;
 };
 
 /**
  * A classic 5-gallon carboy with an airlock — the Fermenting section icon.
- * Strokes use currentColor so the parent controls the tint.
+ * Strokes use currentColor so the parent controls the tint; the wort takes
+ * its color from the beer's SRM.
  */
-export default function CarboyIcon({ className }: CarboyIconProps) {
+export default function CarboyIcon({ className, srm }: CarboyIconProps) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const clipId = `carboyclip-${uid}`;
+  const wort = srmToHex(srm ?? 8);
   const body =
     "M28 24 C16 30 12 44 12 58 L12 76 C12 86 20 90 32 90 C44 90 52 86 52 76 L52 58 C52 44 48 30 36 24 Z";
 
@@ -38,15 +43,17 @@ export default function CarboyIcon({ className }: CarboyIconProps) {
       {/* body */}
       <path d={body} strokeWidth="2.5" fill="rgba(255,255,255,0.04)" />
 
-      {/* fermenting wort, clipped to the body */}
+      {/* fermenting wort, clipped to the body — colored by the beer's SRM */}
       <g clipPath={`url(#${clipId})`}>
-        <rect x="0" y="50" width="64" height="46" fill="#B45309" opacity="0.45" />
-        <rect x="0" y="50" width="64" height="10" fill="#FDE68A" opacity="0.5" />
+        <rect x="0" y="50" width="64" height="46" fill={wort} opacity="0.55" />
+        <rect x="0" y="50" width="64" height="10" fill={wort} opacity="0.85" />
+        {/* krausen foam cap */}
+        <ellipse cx="32" cy="50" rx="20" ry="4" fill="#FBF3DC" opacity="0.85" />
         {/* CO2 bubbles */}
-        <circle cx="24" cy="70" r="2.5" fill="#FDE68A" opacity="0.8" />
-        <circle cx="34" cy="78" r="2" fill="#FDE68A" opacity="0.7" />
-        <circle cx="40" cy="64" r="3" fill="#FDE68A" opacity="0.6" />
-        <circle cx="28" cy="58" r="1.8" fill="#FDE68A" opacity="0.7" />
+        <circle cx="24" cy="70" r="2.5" fill="#FBF3DC" opacity="0.8" />
+        <circle cx="34" cy="78" r="2" fill="#FBF3DC" opacity="0.7" />
+        <circle cx="40" cy="64" r="3" fill="#FBF3DC" opacity="0.6" />
+        <circle cx="28" cy="58" r="1.8" fill="#FBF3DC" opacity="0.7" />
       </g>
 
       {/* shine */}

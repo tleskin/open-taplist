@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import type { Beer, BeerStatus } from "@/db/schema";
 import BeerGlass from "@/components/BeerGlass";
 import CarboyIcon from "@/components/CarboyIcon";
 import { srmToHex } from "@/lib/srm";
 import {
-  isThemeId,
-  themeStyles,
-  type ThemeId,
+  resolveTheme,
+  type CustomThemeParams,
   type ThemeStyles,
 } from "@/lib/themes";
 
@@ -70,7 +70,8 @@ function BeerStats({ beer, t }: { beer: ApiBeer; t: ThemeStyles }) {
 
 export default function TapListPage() {
   const [beers, setBeers] = useState<ApiBeer[] | null>(null);
-  const [themeId, setThemeId] = useState<ThemeId>("midnight");
+  const [themeRef, setThemeRef] = useState("midnight");
+  const [customThemes, setCustomThemes] = useState<CustomThemeParams[]>([]);
   const [breweryName, setBreweryName] = useState(DEFAULT_BREWERY_NAME);
   const [breweryLogo, setBreweryLogo] = useState<string | null>(null);
   const [error, setError] = useState(false);
@@ -84,7 +85,10 @@ export default function TapListPage() {
       if (!beersRes.ok || !settingsRes.ok) throw new Error("bad response");
       setBeers(await beersRes.json());
       const settings = await settingsRes.json();
-      if (isThemeId(settings.theme)) setThemeId(settings.theme);
+      if (typeof settings.theme === "string") setThemeRef(settings.theme);
+      if (Array.isArray(settings.customThemes)) {
+        setCustomThemes(settings.customThemes);
+      }
       if (typeof settings.breweryName === "string" && settings.breweryName) {
         setBreweryName(settings.breweryName);
       }
@@ -103,7 +107,7 @@ export default function TapListPage() {
     return () => clearInterval(id);
   }, [load]);
 
-  const t = themeStyles[themeId];
+  const { styles: t, vars: themeVars } = resolveTheme(themeRef, customThemes);
 
   const byStatus = (status: BeerStatus) =>
     (beers ?? []).filter((b) => b.status === status);
@@ -113,8 +117,8 @@ export default function TapListPage() {
   const hasAny = onTap.length + fermenting.length + comingSoon.length > 0;
 
   return (
-    <div className={t.page}>
-      {themeId === "liquid-glass" && (
+    <div className={t.page} style={themeVars as CSSProperties | undefined}>
+      {themeRef === "liquid-glass" && (
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute -top-32 left-1/4 h-96 w-96 rounded-full bg-amber-500/25 blur-[120px]" />
           <div className="absolute top-1/3 -right-24 h-[28rem] w-[28rem] rounded-full bg-indigo-500/20 blur-[130px]" />
@@ -206,7 +210,7 @@ export default function TapListPage() {
                   {t.cardShine && (
                     <div aria-hidden className={t.cardShine} />
                   )}
-                  <CarboyIcon className="h-24 w-auto shrink-0 opacity-90" />
+                  <CarboyIcon srm={beer.srm} className="h-24 w-auto shrink-0 opacity-90" />
                   <div className="relative min-w-0">
                     <h3 className="flex items-center gap-2 text-2xl font-bold leading-tight">
                       {beer.name}

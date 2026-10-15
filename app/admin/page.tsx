@@ -4,10 +4,16 @@ import { asc } from "drizzle-orm";
 import { getDb } from "@/db";
 import { beers } from "@/db/schema";
 import { getSetting } from "@/lib/settings";
-import { isThemeId, type ThemeId } from "@/lib/themes";
+import {
+  isCustomThemeRef,
+  isThemeId,
+  isValidCustomTheme,
+  type CustomThemeParams,
+} from "@/lib/themes";
 import BeerManager from "./BeerManager";
 import ThemePicker from "./ThemePicker";
 import BrewerySettings from "./BrewerySettings";
+import ThemeMaker from "./ThemeMaker";
 
 export const metadata: Metadata = {
   title: "Admin · OpenTapList",
@@ -26,7 +32,22 @@ export default async function AdminPage() {
     .orderBy(asc(beers.tapNumber));
 
   const storedTheme = await getSetting("theme");
-  const theme: ThemeId = isThemeId(storedTheme) ? storedTheme : "midnight";
+  const themeRef =
+    typeof storedTheme === "string" &&
+    (isThemeId(storedTheme) || isCustomThemeRef(storedTheme))
+      ? storedTheme
+      : "midnight";
+
+  const storedThemes = await getSetting("custom_themes");
+  let customThemes: CustomThemeParams[] = [];
+  try {
+    const parsed = JSON.parse(storedThemes ?? "[]");
+    if (Array.isArray(parsed)) {
+      customThemes = parsed.filter(isValidCustomTheme);
+    }
+  } catch {
+    customThemes = [];
+  }
 
   const storedName = await getSetting("brewery_name");
   const breweryName =
@@ -54,7 +75,8 @@ export default async function AdminPage() {
 
       <main className="mx-auto max-w-5xl space-y-8 px-6 py-8 sm:px-10">
         <BrewerySettings initialName={breweryName} initialLogo={breweryLogo} />
-        <ThemePicker initialTheme={theme} />
+        <ThemePicker initialThemeRef={themeRef} customThemes={customThemes} />
+        <ThemeMaker initialThemes={customThemes} activeThemeRef={themeRef} />
         <BeerManager initialBeers={allBeers} />
       </main>
     </div>

@@ -1,5 +1,11 @@
 import { connection } from "next/server";
-import { isThemeId, type ThemeId } from "@/lib/themes";
+import {
+  isCustomThemeRef,
+  isThemeId,
+  isValidCustomTheme,
+  type CustomThemeParams,
+  type ThemeId,
+} from "@/lib/themes";
 import { deleteSetting, getSetting, setSetting } from "@/lib/settings";
 
 const DEFAULT_THEME: ThemeId = "midnight";
@@ -16,18 +22,33 @@ function isLogoValue(v: unknown): v is string {
   );
 }
 
+function parseCustomThemes(raw: string | null): CustomThemeParams[] {
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isValidCustomTheme);
+  } catch {
+    return [];
+  }
+}
+
 export async function GET() {
   await connection(); // skip prerendering: reads the live database
-  const [storedTheme, storedName, storedLogo] = await Promise.all([
-    getSetting("theme"),
-    getSetting("brewery_name"),
-    getSetting("brewery_logo"),
-  ]);
+  const [storedTheme, storedName, storedLogo, storedCustom] = await Promise.all(
+    [
+      getSetting("theme"),
+      getSetting("brewery_name"),
+      getSetting("brewery_logo"),
+      getSetting("custom_themes"),
+    ]
+  );
   const theme: ThemeId = isThemeId(storedTheme) ? storedTheme : DEFAULT_THEME;
   return Response.json({
-    theme,
+    theme: isCustomThemeRef(storedTheme) ? storedTheme : theme,
     breweryName: storedName ?? DEFAULT_BREWERY_NAME,
     breweryLogo: storedLogo ?? null,
+    customThemes: parseCustomThemes(storedCustom),
   });
 }
 
@@ -43,13 +64,16 @@ export async function PUT(request: Request) {
   const out: Record<string, unknown> = {};
 
   if ("theme" in b) {
-    if (!isThemeId(b.theme)) {
+    const themeOk =
+      isThemeId(b.theme) ||
+      (typeof b.theme === "string" && /^custom:[A-Za-z0-9_-]+$/.test(b.theme));
+    if (!themeOk) {
       return Response.json(
-        { error: "theme must be 'midnight' or 'liquid-glass'." },
+        { error: "theme must be 'midnight', 'liquid-glass', 'daylight', or 'custom:<id>'." },
         { status: 400 }
       );
     }
-    await setSetting("theme", b.theme);
+    await setSetting("theme", b.theme as string);
     out.theme = b.theme;
   }
 
@@ -83,6 +107,22 @@ export async function PUT(request: Request) {
       await setSetting("brewery_logo", logo);
     }
     out.breweryLogo = logo;
+  }
+
+  if ("customThemes" in b) {
+    const list = b.customThemes;
+    if (
+      !Array.isArray(list) ||
+      list.length > 50 ||
+      !list.every(isValidCustomTheme)
+    ) {
+      return Response.json(
+        { error: "customThemes must be an array of up to 50 valid themes." },
+        { status: 400 }
+      );
+    }
+    await setSetting("custom_themes", JSON.stringify(list));
+    out.customThemes = list;
   }
 
   return Response.json(out);

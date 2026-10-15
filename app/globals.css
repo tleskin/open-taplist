@@ -14,3 +14,89 @@ body {
   color: #f4f4f5;
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* ---------- Custom theme layer ----------
+   Driven by CSS variables set on the page root from the admin theme
+   maker. Static classes so Tailwind's scanner picks them up. */
+.ctp-page {
+  background-color: var(--ctp-bg);
+  color: var(--ctp-text);
+}
+.ctp-header {
+  background-color: color-mix(in srgb, var(--ctp-card) 45%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--ctp-accent) 40%, transparent);
+}
+.ctp-kicker {
+  color: var(--ctp-accent);
+}
+.ctp-title {
+  color: var(--ctp-text);
+}
+.ctp-section-title {
+  color: var(--ctp-text);
+}
+.ctp-section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.75rem;
+  width: 2.75rem;
+  border-radius: 0.75rem;
+  background-color: color-mix(in srgb, var(--ctp-accent) 18%, transparent);
+  color: var(--ctp-accent);
+}
+.ctp-card {
+  border: 1px solid color-mix(in srgb, var(--ctp-text) 16%, transparent);
+  background-color: var(--ctp-card);
+}
+.ctp-card-glass {
+  background-color: color-mix(in srgb, var(--ctp-card) 55%, transparent);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+.ctp-card-outline {
+  background-color: transparent;
+  border-style: dashed;
+}
+.ctp-tap-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 4rem;
+  width: 4rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background-color: color-mix(in srgb, var(--ctp-accent) 18%, transparent);
+  color: var(--ctp-accent);
+  font-size: 1.875rem;
+  font-weight: 900;
+}
+.ctp-style-text {
+  color: var(--ctp-accent);
+  opacity: 0.9;
+}
+.ctp-stat-text {
+  color: color-mix(in srgb, var(--ctp-text) 62%, transparent);
+}
+.ctp-stat-value {
+  color: var(--ctp-text);
+  font-weight: 600;
+}
+.ctp-body-text {
+  color: color-mix(in srgb, var(--ctp-text) 66%, transparent);
+}
+.ctp-footer {
+  color: color-mix(in srgb, var(--ctp-text) 45%, transparent);
+}
+.ctp-error {
+  border: 1px solid rgb(248 113 113 / 0.4);
+  background-color: rgb(127 29 29 / 0.4);
+  color: #fecaca;
+}
+.ctp-empty {
+  border: 1px dashed color-mix(in srgb, var(--ctp-text) 25%, transparent);
+}
+.ctp-empty-title {
+  color: var(--ctp-text);
+}
