@@ -6,6 +6,7 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL!,
+    // Accept either DATABASE_URL or POSTGRES_URL (Vercel's POSTGRES prefix).
+    url: process.env.DATABASE_URL || process.env.POSTGRES_URL || "",
   },
 });
