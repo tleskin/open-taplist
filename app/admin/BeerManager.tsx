@@ -128,6 +128,7 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
   const [form, setForm] = useState<FormState>(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [labelDragging, setLabelDragging] = useState(false);
   const labelFileRef = useRef<HTMLInputElement>(null);
 
   function startAdd() {
@@ -176,7 +177,10 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
   async function onLabelFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (!file) return;
+    if (file) await handleLabelFile(file);
+  }
+
+  async function handleLabelFile(file: File) {
     if (!file.type.startsWith("image/")) {
       setFormError("Pick an image file (PNG or JPG).");
       return;
@@ -467,7 +471,24 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
             </div>
             <div>
               <span className={labelClass}>Label image (optional)</span>
-              <div className="mt-1 flex items-center gap-3">
+              <div
+                className={`mt-1 flex items-center gap-3 rounded-xl border border-dashed p-3 transition ${
+                  labelDragging
+                    ? "border-amber-500 bg-amber-500/10"
+                    : "border-transparent"
+                }`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setLabelDragging(true);
+                }}
+                onDragLeave={() => setLabelDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setLabelDragging(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) void handleLabelFile(file);
+                }}
+              >
                 {form.labelImage ? (
                   <img
                     src={form.labelImage}
@@ -506,8 +527,8 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
                 />
               </div>
               <p className="mt-1 text-xs text-zinc-500">
-                Shown instead of the glass on the tap list. Resized to max
-                512px.
+                Shown instead of the glass on the tap list. Drag and drop
+                or use Upload — resized to max 512px.
               </p>
             </div>
             <div className="sm:col-span-2">

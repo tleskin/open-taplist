@@ -31,6 +31,7 @@ export default function BrewerySettings({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function saveName() {
@@ -55,7 +56,10 @@ export default function BrewerySettings({
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (!file) return;
+    if (file) handleLogoFile(file);
+  }
+
+  function handleLogoFile(file: File) {
     if (!file.type.startsWith("image/")) {
       setError("Pick an image file (PNG or JPG).");
       return;
@@ -156,7 +160,24 @@ export default function BrewerySettings({
           No logo yet — the display shows the brewery name as text.
         </p>
       )}
-      <div className="mt-3">
+      <div
+        className={`mt-3 rounded-xl border border-dashed p-4 transition ${
+          dragging
+            ? "border-amber-500 bg-amber-500/10"
+            : "border-zinc-700"
+        }`}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          const file = e.dataTransfer.files?.[0];
+          if (file) handleLogoFile(file);
+        }}
+      >
         <input
           ref={fileRef}
           type="file"
@@ -173,7 +194,8 @@ export default function BrewerySettings({
           Upload logo…
         </button>
         <p className="mt-2 text-xs text-zinc-500">
-          PNG or JPG, under 2MB. Square logos look best on the TV.
+          PNG or JPG, under 2MB — or drag and drop an image here. Square
+          logos look best on the TV.
         </p>
       </div>
 
