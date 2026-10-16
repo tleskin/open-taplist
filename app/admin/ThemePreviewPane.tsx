@@ -89,7 +89,7 @@ export default function ThemePreviewPane({
                     className="h-16 w-auto shrink-0"
                   />
                   <div className="relative min-w-0">
-                    <h3 className="text-xl font-bold leading-tight">
+                    <h3 className={`text-xl font-bold leading-tight ${t.nameText}`}>
                       Garage Door IPA
                     </h3>
                     <p className={t.styleText}>West Coast IPA</p>
@@ -117,7 +117,7 @@ export default function ThemePreviewPane({
                     className="h-16 w-auto shrink-0 opacity-90"
                   />
                   <div className="relative min-w-0">
-                    <h3 className="flex items-center gap-2 text-xl font-bold leading-tight">
+                    <h3 className={`flex items-center gap-2 text-xl font-bold leading-tight ${t.nameText}`}>
                       Midnight Stout
                       <span
                         title="~15 SRM"

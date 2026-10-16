@@ -207,7 +207,7 @@ function OnTapCard({
         </>
       )}
       <div className="relative min-w-0">
-        <h3 className="text-2xl font-bold leading-tight 2xl:text-xl">
+        <h3 className={`text-2xl font-bold leading-tight 2xl:text-xl ${t.nameText}`}>
           {beer.name}
         </h3>
         <p className={t.styleText}>{beer.style}</p>
@@ -276,7 +276,7 @@ function FermentingSection({
               className="h-24 w-auto shrink-0 opacity-90"
             />
             <div className="relative min-w-0">
-              <h3 className="text-2xl font-bold leading-tight">
+              <h3 className={`text-2xl font-bold leading-tight ${t.nameText}`}>
                 {beer.name}{" "}
                 <span
                   title={`~${beer.srm ?? "?"} SRM`}
@@ -317,7 +317,7 @@ function ComingSoonSection({
             {t.cardShine && <div aria-hidden className={t.cardShine} />}
             <BeerVisual beer={beer} ghost />
             <div className="relative min-w-0">
-              <h3 className="text-2xl font-bold leading-tight">{beer.name}</h3>
+              <h3 className={`text-2xl font-bold leading-tight ${t.nameText}`}>{beer.name}</h3>
               <p className={t.styleText}>{beer.style}</p>
               <BeerStats beer={beer} t={t} />
               {beer.description && (

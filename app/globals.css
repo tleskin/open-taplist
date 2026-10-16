@@ -108,6 +108,22 @@ body {
 .ctp-empty-title {
   color: var(--ctp-text);
 }
+.ctp-name-text {
+  color: var(--ctp-text);
+}
+
+/* ---------- Chalkboard theme ---------- */
+@utility font-chalk {
+  font-family: var(--font-chalk), "Arial Narrow", sans-serif;
+}
+.chalkboard-page {
+  background-color: #14100b;
+  background-image:
+    linear-gradient(rgb(10 8 5 / 0.8), rgb(10 8 5 / 0.86)),
+    url("/themes/chalkboard-wood.jpg");
+  background-size: cover;
+  background-position: center;
+}
 
 /* TV page rotation: soft fade/slide when the tap list turns the page. */
 @keyframes pagefade {

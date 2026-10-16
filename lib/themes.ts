@@ -2,7 +2,8 @@ export type ThemeId =
   | "midnight"
   | "liquid-glass"
   | "liquid-glass-light"
-  | "daylight";
+  | "daylight"
+  | "chalkboard";
 
 export const THEMES: Record<
   ThemeId,
@@ -32,6 +33,12 @@ export const THEMES: Record<
     description:
       "A bright taproom board — dark text on warm paper, easy on the eyes during the day.",
   },
+  chalkboard: {
+    id: "chalkboard",
+    name: "Chalkboard",
+    description:
+      "Lime-chalk lettering on dark wood — the classic taproom board look.",
+  },
 };
 
 export function isThemeId(value: unknown): value is ThemeId {
@@ -39,7 +46,8 @@ export function isThemeId(value: unknown): value is ThemeId {
     value === "midnight" ||
     value === "liquid-glass" ||
     value === "liquid-glass-light" ||
-    value === "daylight"
+    value === "daylight" ||
+    value === "chalkboard"
   );
 }
 
@@ -120,6 +128,7 @@ function customThemeStyles(cardStyle: CardStyle): ThemeStyles {
     card: `${cardBase} flex gap-5 rounded-2xl p-6 shadow-lg`,
     cardShine: null,
     tapBadge: "ctp-tap-badge",
+    nameText: "ctp-name-text",
     styleText: "ctp-style-text mt-1 text-sm font-medium uppercase tracking-widest",
     statText: "ctp-stat-text mt-2 text-sm",
     statValue: "ctp-stat-value",
@@ -179,6 +188,8 @@ export type ThemeStyles = {
   card: string;
   cardShine: string | null;
   tapBadge: string;
+  /** Pour name heading on tap cards (color, and font for themes that set one). */
+  nameText: string;
   styleText: string;
   statText: string;
   statValue: string;
@@ -204,6 +215,7 @@ export const themeStyles: Record<ThemeId, ThemeStyles> = {
     cardShine: null,
     tapBadge:
       "flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-3xl font-black text-amber-400",
+    nameText: "text-zinc-100",
     styleText:
       "mt-1 text-sm font-medium uppercase tracking-widest text-amber-400/90",
     statText: "mt-2 text-sm text-zinc-400",
@@ -234,6 +246,7 @@ export const themeStyles: Record<ThemeId, ThemeStyles> = {
       "pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.14] to-transparent",
     tapBadge:
       "flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-3xl font-black text-white shadow-inner backdrop-blur-md",
+    nameText: "text-white",
     styleText:
       "mt-1 text-sm font-medium uppercase tracking-[0.2em] text-white/60",
     statText: "mt-2 text-sm text-white/60",
@@ -263,6 +276,7 @@ export const themeStyles: Record<ThemeId, ThemeStyles> = {
       "pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/70 to-transparent",
     tapBadge:
       "flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-white/70 bg-white/60 text-3xl font-black text-amber-600 shadow-inner backdrop-blur-md",
+    nameText: "text-zinc-900",
     styleText:
       "mt-1 text-sm font-medium uppercase tracking-[0.2em] text-amber-700/80",
     statText: "mt-2 text-sm text-zinc-500",
@@ -290,6 +304,7 @@ export const themeStyles: Record<ThemeId, ThemeStyles> = {
     cardShine: null,
     tapBadge:
       "flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-amber-700/10 text-3xl font-black text-amber-700",
+    nameText: "text-zinc-900",
     styleText:
       "mt-1 text-sm font-medium uppercase tracking-widest text-amber-700/90",
     statText: "mt-2 text-sm text-zinc-600",
@@ -303,5 +318,36 @@ export const themeStyles: Record<ThemeId, ThemeStyles> = {
     emptyBox:
       "rounded-2xl border border-dashed border-zinc-400 px-6 py-20 text-center",
     emptyTitle: "text-3xl font-bold text-zinc-700",
+  },
+  chalkboard: {
+    page: "chalkboard-page min-h-screen text-[#f2ede3]",
+    header: "relative px-6 py-8 text-center sm:px-10",
+    kicker:
+      "text-sm font-semibold uppercase tracking-[0.35em] text-[#cde64e]/70",
+    title:
+      "font-chalk mt-2 text-5xl font-bold uppercase tracking-wide text-[#cde64e] sm:text-6xl",
+    sectionTitle:
+      "font-chalk text-3xl font-semibold uppercase tracking-wide text-[#cde64e]",
+    sectionIconWrap:
+      "flex h-11 w-11 items-center justify-center rounded-full border border-[#cde64e]/40 text-[#cde64e]",
+    card: "flex gap-5 border-b border-white/10 p-6",
+    cardShine: null,
+    tapBadge:
+      "flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-[#cde64e]/60 text-3xl font-black text-[#cde64e]",
+    nameText: "font-chalk text-[#cde64e]",
+    styleText:
+      "mt-1 text-sm font-medium uppercase tracking-widest text-white/90",
+    statText: "mt-2 text-sm text-stone-300",
+    statValue: "font-semibold text-white",
+    bodyText: "mt-2 leading-relaxed text-stone-300/90",
+    mutedCard:
+      "flex gap-5 border-b border-dashed border-white/10 p-6 opacity-70",
+    footer: "relative px-6 pb-6 text-center text-xs text-stone-500 sm:px-10",
+    errorBox:
+      "rounded-xl border border-red-400/40 bg-red-950/50 px-5 py-4 text-red-200",
+    emptyBox:
+      "rounded-2xl border border-dashed border-white/20 px-6 py-20 text-center",
+    emptyTitle:
+      "font-chalk text-3xl font-semibold uppercase tracking-wide text-[#cde64e]",
   },
 };
