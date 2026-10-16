@@ -77,7 +77,7 @@ function BeerVisual({ beer, ghost }: { beer: ApiBeer; ghost?: boolean }) {
       <img
         src={beer.labelImage}
         alt={`${beer.name} label`}
-        className={`h-44 w-44 shrink-0 rounded-2xl object-contain md:h-64 md:w-64 ${ghostCls}`}
+        className={`h-44 w-44 shrink-0 rounded-2xl object-contain md:h-64 md:w-64 2xl:h-36 2xl:w-36 ${ghostCls}`}
       />
     );
   }
@@ -85,7 +85,7 @@ function BeerVisual({ beer, ghost }: { beer: ApiBeer; ghost?: boolean }) {
     <BeerGlass
       glass={beer.glass}
       srm={beer.srm}
-      className={`h-24 w-auto shrink-0 ${ghostCls}`}
+      className={`h-24 w-auto shrink-0 2xl:h-20 ${ghostCls}`}
     />
   );
 }
@@ -104,7 +104,7 @@ function BeerStats({ beer, t }: { beer: ApiBeer; t: ThemeStyles }) {  return (
 
 function OnTapCard({ beer, t }: { beer: ApiBeer; t: ThemeStyles }) {
   return (
-    <li className={t.card}>
+    <li className={`${t.card} 2xl:gap-4 2xl:p-5`}>
       {t.cardShine && <div aria-hidden className={t.cardShine} />}
       {beer.labelImage ? (
         <div className="relative shrink-0 self-start">
@@ -115,15 +115,21 @@ function OnTapCard({ beer, t }: { beer: ApiBeer; t: ThemeStyles }) {
         </div>
       ) : (
         <>
-          <div className={t.tapBadge}>{beer.tapNumber}</div>
+          <div className={`${t.tapBadge} 2xl:h-12 2xl:w-12 2xl:text-2xl`}>
+            {beer.tapNumber}
+          </div>
           <BeerVisual beer={beer} />
         </>
       )}
       <div className="relative min-w-0">
-        <h3 className="text-2xl font-bold leading-tight">{beer.name}</h3>
+        <h3 className="text-2xl font-bold leading-tight 2xl:text-xl">
+          {beer.name}
+        </h3>
         <p className={t.styleText}>{beer.style}</p>
         <BeerStats beer={beer} t={t} />
-        {beer.description && <p className={t.bodyText}>{beer.description}</p>}
+        {beer.description && (
+          <p className={`${t.bodyText} 2xl:line-clamp-2`}>{beer.description}</p>
+        )}
       </div>
     </li>
   );
@@ -183,7 +189,16 @@ export default function TapListPage() {
   const hasAny = onTap.length + fermenting.length + comingSoon.length > 0;
 
   const [pageIdx, setPageIdx] = useState(0);
-  const onTapPages = chunk(onTap, ON_TAP_PAGE_SIZE);
+  // TV widths (2xl) fit 8 compact taps per page; smaller screens get 4.
+  const [perPage, setPerPage] = useState(ON_TAP_PAGE_SIZE);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1536px)");
+    const update = () => setPerPage(mq.matches ? 8 : ON_TAP_PAGE_SIZE);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  const onTapPages = chunk(onTap, perPage);
   const pageCount =
     onTapPages.length + (fermenting.length + comingSoon.length > 0 ? 1 : 0);
 
@@ -230,7 +245,7 @@ export default function TapListPage() {
         </div>
       </header>
 
-      <main className="relative mx-auto max-w-6xl space-y-12 px-6 py-8 sm:px-10">
+      <main className="relative mx-auto max-w-6xl space-y-12 px-6 py-8 sm:px-10 2xl:max-w-[1720px]">
         {error && (
           <div className={t.errorBox}>
             Couldn&apos;t reach the tap list. Check the server connection.
@@ -262,7 +277,7 @@ export default function TapListPage() {
                     title="On Tap"
                     icon={<BeerGlass glass="pint" srm={6} className="h-7 w-auto" />}
                   />
-                  <ul className="grid gap-5 md:grid-cols-2">
+                  <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-4">
                     {onTapPages[pageIdx].map((beer) => (
                       <OnTapCard key={beer.id} beer={beer} t={t} />
                     ))}
@@ -277,7 +292,7 @@ export default function TapListPage() {
                         title="Fermenting"
                         icon={<CarboyIcon className="h-7 w-auto" />}
                       />
-                      <ul className="grid gap-5 md:grid-cols-2">
+                      <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
                         {fermenting.map((beer) => (
                           <li key={beer.id} className={t.card}>
                             {t.cardShine && (
@@ -312,7 +327,7 @@ export default function TapListPage() {
                         title="Coming Soon"
                         icon={<ClockIcon className="h-6 w-6" />}
                       />
-                      <ul className="grid gap-5 md:grid-cols-2">
+                      <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
                         {comingSoon.map((beer) => (
                           <li key={beer.id} className={t.mutedCard}>
                             {t.cardShine && (
