@@ -366,7 +366,6 @@ function OnTapSection({
       tv.rotateSeconds
     );
     const pageBeers = pages[pageIdx] ?? [];
-    const cols = gridCols(pageBeers.length, true, true, tv.columns);
     return (
       <section className="flex min-h-0 flex-1 flex-col">
         <SectionHeader
@@ -379,11 +378,8 @@ function OnTapSection({
           className="animate-pagefade flex min-h-0 flex-1 flex-col"
         >
           <ul
-            className="grid min-h-0 flex-1 gap-5"
-            style={{
-              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-              gridAutoRows: "1fr",
-            }}
+            className="tv-pour-list min-h-0 flex-1 gap-5"
+            style={{ "--tv-cols": tv.columns } as CSSProperties}
           >
             {pageBeers.map((beer) => (
               <OnTapCard
@@ -476,11 +472,12 @@ function FermentingSection({
         className={tv ? "animate-pagefade flex min-h-0 flex-1 flex-col" : undefined}
       >
       <ul
-        className={`grid gap-5${tv ? " min-h-0 flex-1" : ""}`}
-        style={{
-          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-          ...(tv ? { gridAutoRows: "1fr" as const } : {}),
-        }}
+        className={tv ? "tv-pour-list min-h-0 flex-1 gap-5" : "grid gap-5"}
+        style={
+          tv
+            ? ({ "--tv-cols": tv.columns } as CSSProperties)
+            : { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }
+        }
       >
         {pageBeers.map((beer) => (
           <li key={beer.id} className={t.card}>
@@ -564,11 +561,12 @@ function ComingSoonSection({
         className={tv ? "animate-pagefade flex min-h-0 flex-1 flex-col" : undefined}
       >
       <ul
-        className={`grid gap-5${tv ? " min-h-0 flex-1" : ""}`}
-        style={{
-          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-          ...(tv ? { gridAutoRows: "1fr" as const } : {}),
-        }}
+        className={tv ? "tv-pour-list min-h-0 flex-1 gap-5" : "grid gap-5"}
+        style={
+          tv
+            ? ({ "--tv-cols": tv.columns } as CSSProperties)
+            : { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }
+        }
       >
         {pageBeers.map((beer) => (
           <li key={beer.id} className={t.mutedCard}>
