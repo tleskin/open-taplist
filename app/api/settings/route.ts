@@ -42,11 +42,6 @@ function parseCustomThemes(raw: string | null): CustomThemeParams[] {
   }
 }
 
-function clampColumns(value: string | null, dflt: number) {
-  const n = parseInt(value ?? "", 10);
-  return Number.isInteger(n) ? Math.min(4, Math.max(1, n)) : dflt;
-}
-
 export async function GET() {
   await connection(); // skip prerendering: reads the live database
   const [
@@ -61,9 +56,6 @@ export async function GET() {
     storedOnTap,
     storedFerm,
     storedSoon,
-    storedColOnTap,
-    storedColFerm,
-    storedColSoon,
   ] = await Promise.all([
     getSetting("theme"),
     getSetting("brewery_name"),
@@ -76,9 +68,6 @@ export async function GET() {
     getSetting("show_on_tap"),
     getSetting("show_fermenting"),
     getSetting("show_coming_soon"),
-    getSetting("columns_on_tap"),
-    getSetting("columns_fermenting"),
-    getSetting("columns_coming_soon"),
   ]);
   const theme: ThemeId = isThemeId(storedTheme) ? storedTheme : DEFAULT_THEME;
   return Response.json({
@@ -95,11 +84,6 @@ export async function GET() {
     showOnTap: storedOnTap !== "false",
     showFermenting: storedFerm !== "false",
     showComingSoon: storedSoon !== "false",
-    columns: {
-      onTap: clampColumns(storedColOnTap, 4),
-      fermenting: clampColumns(storedColFerm, 2),
-      comingSoon: clampColumns(storedColSoon, 2),
-    },
   });
 }
 
@@ -241,34 +225,6 @@ export async function PUT(request: Request) {
       }
       await setSetting(storeKey, b[bodyKey] ? "true" : "false");
       out[bodyKey] = b[bodyKey];
-    }
-  }
-
-  if ("columns" in b) {
-    const c = b.columns;
-    if (typeof c !== "object" || c === null || Array.isArray(c)) {
-      return Response.json(
-        { error: "columns must be an object." },
-        { status: 400 }
-      );
-    }
-    const entries = [
-      ["onTap", "columns_on_tap"],
-      ["fermenting", "columns_fermenting"],
-      ["comingSoon", "columns_coming_soon"],
-    ] as const;
-    out.columns = {};
-    for (const [bodyKey, storeKey] of entries) {
-      const v = (c as Record<string, unknown>)[bodyKey];
-      if (v === undefined) continue;
-      if (!Number.isInteger(v) || (v as number) < 1 || (v as number) > 4) {
-        return Response.json(
-          { error: `${bodyKey} must be a whole number, 1-4.` },
-          { status: 400 }
-        );
-      }
-      await setSetting(storeKey, String(v));
-      (out.columns as Record<string, unknown>)[bodyKey] = v;
     }
   }
 

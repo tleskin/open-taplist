@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import type { CSSProperties } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 import type { Beer, BeerStatus } from "@/db/schema";
 import BeerGlass from "@/components/BeerGlass";
 import CarboyIcon from "@/components/CarboyIcon";
@@ -21,22 +21,50 @@ type ApiBeer = Omit<Beer, "createdAt" | "updatedAt"> & {
 const DEFAULT_BREWERY_NAME =
   process.env.NEXT_PUBLIC_BREWERY_NAME ?? "My Home Brewery";
 const POLL_INTERVAL_MS = 30_000;
-// TV paging: On Tap is chunked into full-screen pages; Fermenting + Coming
-/**
- * TV column mode: the tap list is a single page of section columns
- * (On Tap | Fermenting | Coming Soon). Each column pages through its own
- * pours independently with a fade.
- */
-export type TvConfig = {
-  /** Grid columns for the section's pour band (admin setting, 1-4). */
-  columns: number;
-  rotate: boolean;
-  rotateSeconds: number;
-};
+// ---------- TV dashboard ----------
+// Every TV tile is a fixed-size card, so rotating pages never shifts the
+// layout. Sections get screen space proportional to their pour counts: a
+// big On Tap section gets its own tall band while small sections pair up
+// into a shared row (e.g. 8 on tap -> top two-thirds, 1 fermenting +
+// 1 coming soon share the bottom third, left-aligned).
+const TV_TILE_W = 380;
+const TV_TILE_H = 270;
+const TV_GAP = 20; // gap-5
+const TV_COMPACT_ROW_H = 68;
 
-/** Card rows visible per section band (compact themes stack more). */
-function tvRows(t: ThemeStyles) {
-  return t.compact ? 4 : 1;
+/** Section flex weight ~ how many tile rows it wants (1-3). */
+function tvWeight(count: number) {
+  return Math.min(3, Math.max(1, Math.ceil(count / 4)));
+}
+
+/** How many fixed tiles fit in the measured area (cols x rows). */
+function useFitCount(
+  ref: RefObject<HTMLDivElement | null>,
+  tileW: number,
+  tileH: number,
+  fixedCols?: number
+) {
+  const [fit, setFit] = useState(1);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const compute = () => {
+      const r = el.getBoundingClientRect();
+      const cols =
+        fixedCols ??
+        Math.max(1, Math.floor((r.width + TV_GAP) / (tileW + TV_GAP)));
+      const rows = Math.max(
+        1,
+        Math.floor((r.height + TV_GAP) / (tileH + TV_GAP))
+      );
+      setFit(Math.max(1, cols * rows));
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref, tileW, tileH, fixedCols]);
+  return fit;
 }
 
 function useTvPager(
@@ -93,12 +121,6 @@ function TvDots({
   );
 }
 
-function chunk<T>(arr: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-  return out;
-}
-
 /**
  * Grid columns for a card row: never more columns than cards, so a short
  * row spreads across the full width instead of bunching up on the left.
@@ -106,6 +128,369 @@ function chunk<T>(arr: T[], size: number): T[][] {
 function gridCols(count: number, isMd: boolean, isTv: boolean, maxTv: number) {
   if (!isMd) return 1;
   return Math.max(1, Math.min(count, isTv ? maxTv : 2));
+}
+
+/** Fixed-size TV card tile: an identical box for every pour. */
+function TvPourTile({
+  beer,
+  t,
+  art,
+  badge,
+  afterName,
+  cheers,
+  showDescriptions,
+  cardClass,
+}: {
+  beer: ApiBeer;
+  t: ThemeStyles;
+  art: ReactNode;
+  badge?: ReactNode;
+  afterName?: ReactNode;
+  cheers?: ReactNode;
+  showDescriptions: boolean;
+  cardClass?: string;
+}) {
+  return (
+    <li
+      style={{ width: TV_TILE_W, height: TV_TILE_H }}
+      className={`${cardClass ?? t.card} shrink-0 items-center overflow-hidden`}
+    >
+      {t.cardShine && <div aria-hidden className={t.cardShine} />}
+      <div className="relative shrink-0">
+        {art}
+        {badge}
+      </div>
+      <div className="relative min-w-0 flex-1">
+        <h3
+          className={`line-clamp-2 text-xl font-bold leading-tight ${t.nameText}`}
+        >
+          {beer.name} {afterName}
+        </h3>
+        <p className={t.styleText}>{beer.style}</p>
+        <BeerStats beer={beer} t={t} />
+        {cheers}
+        {showDescriptions && beer.description && (
+          <p className={`${t.bodyText} mt-1 line-clamp-3`}>{beer.description}</p>
+        )}
+      </div>
+    </li>
+  );
+}
+
+/** Fixed-height dense row for compact themes on the TV. */
+function TvCompactRow({
+  beer,
+  t,
+  leading,
+  meta,
+  showDescriptions,
+}: {
+  beer: ApiBeer;
+  t: ThemeStyles;
+  leading: ReactNode;
+  meta: ReactNode;
+  showDescriptions: boolean;
+}) {
+  return (
+    <li
+      style={{ height: TV_COMPACT_ROW_H }}
+      className="flex w-full shrink-0 items-center gap-4 overflow-hidden border-b border-white/10"
+    >
+      {leading}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-x-3">
+          <h3 className={`truncate text-xl font-bold leading-tight ${t.nameText}`}>
+            {beer.name}
+          </h3>
+          <p className="shrink-0 text-sm font-medium uppercase tracking-widest text-white/80">
+            {beer.style}
+          </p>
+          <div className="flex min-w-0 items-center gap-3">{meta}</div>
+        </div>
+        {showDescriptions && beer.description && (
+          <p className={`truncate text-sm opacity-70 ${t.bodyText}`}>
+            {beer.description}
+          </p>
+        )}
+      </div>
+    </li>
+  );
+}
+
+/**
+ * One TV dashboard section: header, a measured tile area that pages
+ * through pours (left-aligned fixed tiles), and rotation dots.
+ */
+function TvSection({
+  title,
+  icon,
+  beers,
+  t,
+  renderTile,
+  rotate,
+  rotateSeconds,
+  flexGrow,
+}: {
+  title: string;
+  icon: ReactNode;
+  beers: ApiBeer[];
+  t: ThemeStyles;
+  renderTile: (beer: ApiBeer) => ReactNode;
+  rotate: boolean;
+  rotateSeconds: number;
+  flexGrow: number;
+}) {
+  const areaRef = useRef<HTMLDivElement | null>(null);
+  const perPage = useFitCount(
+    areaRef,
+    TV_TILE_W,
+    t.compact ? TV_COMPACT_ROW_H : TV_TILE_H,
+    t.compact ? 1 : undefined
+  );
+  const { pageIdx, setPageIdx, pageCount } = useTvPager(
+    beers.length,
+    perPage,
+    rotate,
+    rotateSeconds
+  );
+  const safeIdx = pageCount > 0 ? pageIdx % pageCount : 0;
+  const pageBeers = beers.slice(safeIdx * perPage, safeIdx * perPage + perPage);
+  return (
+    <section
+      className="flex min-h-0 min-w-0 flex-col"
+      style={{ flexGrow, flexShrink: 1, flexBasis: 0 }}
+    >
+      <SectionHeader t={t} title={title} icon={icon} />
+      <div ref={areaRef} className="min-h-0 min-w-0 flex-1">
+        <div
+          key={safeIdx}
+          className="animate-pagefade flex flex-wrap content-start items-stretch justify-start gap-5"
+        >
+          {pageBeers.map((beer) => (
+            <Fragment key={beer.id}>{renderTile(beer)}</Fragment>
+          ))}
+        </div>
+      </div>
+      <TvDots
+        pageCount={pageCount}
+        pageIdx={safeIdx}
+        setPageIdx={setPageIdx}
+        label={title}
+      />
+    </section>
+  );
+}
+
+/**
+ * The TV dashboard: sections share the screen proportionally to their
+ * pour counts. Sections wanting 2+ tile rows get their own full-width
+ * band; small sections pair up into a shared row.
+ */
+function TvBoard({
+  onTap,
+  fermenting,
+  comingSoon,
+  t,
+  cheersEnabled,
+  showDescriptions,
+  rotate,
+  rotateSeconds,
+}: {
+  onTap: ApiBeer[];
+  fermenting: ApiBeer[];
+  comingSoon: ApiBeer[];
+  t: ThemeStyles;
+  cheersEnabled: boolean;
+  showDescriptions: boolean;
+  rotate: boolean;
+  rotateSeconds: number;
+}) {
+  const tapBadge = (n: number) => (
+    <div className={`${t.tapBadge} absolute -left-2 -top-2 scale-[0.65]`}>
+      {n}
+    </div>
+  );
+  const cheers = (beer: ApiBeer) =>
+    cheersEnabled ? (
+      <span className="inline-flex items-center [&>button]:m-0">
+        <CheersButton beerId={beer.id} count={beer.cheers ?? 0} />
+      </span>
+    ) : undefined;
+
+  const renderOnTap = (beer: ApiBeer) =>
+    t.compact ? (
+      <TvCompactRow
+        beer={beer}
+        t={t}
+        leading={
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-[#cde64e]/60 text-lg font-black text-[#cde64e]">
+            {beer.tapNumber}
+          </div>
+        }
+        meta={
+          <>
+            <BeerStats beer={beer} t={t} />
+            {cheers(beer)}
+          </>
+        }
+        showDescriptions={showDescriptions}
+      />
+    ) : (
+      <TvPourTile
+        beer={beer}
+        t={t}
+        art={<BeerVisual beer={beer} />}
+        badge={tapBadge(beer.tapNumber)}
+        cheers={cheers(beer)}
+        showDescriptions={showDescriptions}
+      />
+    );
+
+  const renderFerm = (beer: ApiBeer) =>
+    t.compact ? (
+      <TvCompactRow
+        beer={beer}
+        t={t}
+        leading={
+          <CarboyIcon srm={beer.srm} className="h-10 w-auto shrink-0 opacity-90" />
+        }
+        meta={
+          <>
+            <BeerStats beer={beer} t={t} />
+            <span
+              title={`~${beer.srm ?? "?"} SRM`}
+              className="inline-block h-4 w-4 shrink-0 rounded-full border border-white/30"
+              style={{ backgroundColor: srmToHex(beer.srm) }}
+            />
+          </>
+        }
+        showDescriptions={showDescriptions}
+      />
+    ) : (
+      <TvPourTile
+        beer={beer}
+        t={t}
+        art={
+          <CarboyIcon srm={beer.srm} className="h-20 w-auto shrink-0 opacity-90" />
+        }
+        afterName={
+          <span
+            title={`~${beer.srm ?? "?"} SRM`}
+            className="inline-block h-4 w-4 rounded-full border border-white/30 align-middle"
+            style={{ backgroundColor: srmToHex(beer.srm) }}
+          />
+        }
+        showDescriptions={showDescriptions}
+      />
+    );
+
+  const renderSoon = (beer: ApiBeer) =>
+    t.compact ? (
+      <TvCompactRow
+        beer={beer}
+        t={t}
+        leading={
+          <BeerGlass
+            glass={beer.glass}
+            srm={beer.srm}
+            className="h-10 w-auto shrink-0 opacity-40"
+          />
+        }
+        meta={<BeerStats beer={beer} t={t} />}
+        showDescriptions={showDescriptions}
+      />
+    ) : (
+      <TvPourTile
+        beer={beer}
+        t={t}
+        cardClass={t.mutedCard}
+        art={<BeerVisual beer={beer} ghost />}
+        showDescriptions={showDescriptions}
+      />
+    );
+
+  const defs = [
+    {
+      key: "onTap",
+      title: "On Tap",
+      icon: <BeerGlass glass="pint" srm={6} className="h-7 w-auto" />,
+      beers: onTap,
+      renderTile: renderOnTap,
+    },
+    {
+      key: "ferm",
+      title: "Fermenting",
+      icon: <CarboyIcon className="h-7 w-auto" />,
+      beers: fermenting,
+      renderTile: renderFerm,
+    },
+    {
+      key: "soon",
+      title: "Coming Soon",
+      icon: <ClockIcon className="h-6 w-6" />,
+      beers: comingSoon,
+      renderTile: renderSoon,
+    },
+  ].filter((d) => d.beers.length > 0);
+
+  const bands: { defs: typeof defs; flex: number }[] = [];
+  let small: typeof defs = [];
+  const flushSmall = () => {
+    if (small.length > 0) {
+      bands.push({ defs: small, flex: 1 });
+      small = [];
+    }
+  };
+  for (const d of defs) {
+    if (tvWeight(d.beers.length) >= 2) {
+      flushSmall();
+      bands.push({ defs: [d], flex: tvWeight(d.beers.length) });
+    } else {
+      small.push(d);
+      if (small.length === 2) flushSmall();
+    }
+  }
+  flushSmall();
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-6 2xl:gap-8">
+      {bands.map((band) =>
+        band.defs.length === 1 ? (
+          <TvSection
+            key={band.defs[0].key}
+            title={band.defs[0].title}
+            icon={band.defs[0].icon}
+            beers={band.defs[0].beers}
+            t={t}
+            renderTile={band.defs[0].renderTile}
+            rotate={rotate}
+            rotateSeconds={rotateSeconds}
+            flexGrow={band.flex}
+          />
+        ) : (
+          <div
+            key={band.defs.map((d) => d.key).join("-")}
+            className="flex min-h-0 min-w-0 gap-6 2xl:gap-8"
+            style={{ flexGrow: band.flex, flexShrink: 1, flexBasis: 0 }}
+          >
+            {band.defs.map((d) => (
+              <TvSection
+                key={d.key}
+                title={d.title}
+                icon={d.icon}
+                beers={d.beers}
+                t={t}
+                renderTile={d.renderTile}
+                rotate={rotate}
+                rotateSeconds={rotateSeconds}
+                flexGrow={1}
+              />
+            ))}
+          </div>
+        )
+      )}
+    </div>
+  );
 }
 
 function ClockIcon({ className }: { className?: string }) {
@@ -153,7 +538,7 @@ function BeerVisual({ beer, ghost }: { beer: ApiBeer; ghost?: boolean }) {
       <img
         src={beer.labelImage}
         alt={`${beer.name} label`}
-        className={`h-44 w-44 shrink-0 rounded-2xl object-contain md:h-64 md:w-64 2xl:h-36 2xl:w-36 ${ghostCls}`}
+        className={`h-44 w-44 shrink-0 rounded-2xl object-contain md:h-64 md:w-64 2xl:h-28 2xl:w-28 ${ghostCls}`}
       />
     );
   }
@@ -344,7 +729,6 @@ function OnTapSection({
   isMd,
   isTv,
   showDescriptions,
-  tv,
 }: {
   beers: ApiBeer[];
   t: ThemeStyles;
@@ -352,56 +736,7 @@ function OnTapSection({
   isMd: boolean;
   isTv: boolean;
   showDescriptions: boolean;
-  tv?: TvConfig;
 }) {
-  if (tv) {
-    // TV column mode: this section is one column of the single-page board,
-    // paging through its own pours independently.
-    const pageSize = Math.max(1, tv.columns * tvRows(t));
-    const pages = chunk(beers, pageSize);
-    const { pageIdx, setPageIdx, pageCount } = useTvPager(
-      beers.length,
-      pageSize,
-      tv.rotate,
-      tv.rotateSeconds
-    );
-    const pageBeers = pages[pageIdx] ?? [];
-    return (
-      <section className="flex min-h-0 flex-1 flex-col">
-        <SectionHeader
-          t={t}
-          title="On Tap"
-          icon={<BeerGlass glass="pint" srm={6} className="h-7 w-auto" />}
-        />
-        <div
-          key={pageIdx}
-          className="animate-pagefade flex min-h-0 flex-1 flex-col"
-        >
-          <ul
-            className="tv-pour-list min-h-0 flex-1 gap-5"
-            style={{ "--tv-cols": tv.columns } as CSSProperties}
-          >
-            {pageBeers.map((beer) => (
-              <OnTapCard
-                key={beer.id}
-                beer={beer}
-                t={t}
-                cheersEnabled={cheersEnabled}
-                isTv
-                showDescriptions={showDescriptions}
-              />
-            ))}
-          </ul>
-        </div>
-        <TvDots
-          pageCount={pageCount}
-          pageIdx={pageIdx}
-          setPageIdx={setPageIdx}
-          label="On Tap"
-        />
-      </section>
-    );
-  }
   const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 4);
   return (
     <section className={isTv ? "flex min-h-0 flex-1 flex-col" : undefined}>
@@ -438,48 +773,26 @@ function FermentingSection({
   isMd,
   isTv,
   showDescriptions,
-  tv,
 }: {
   beers: ApiBeer[];
   t: ThemeStyles;
   isMd: boolean;
   isTv: boolean;
   showDescriptions: boolean;
-  tv?: TvConfig;
 }) {
-  const pageSize = tv ? Math.max(1, tv.columns * tvRows(t)) : Math.max(1, beers.length);
-  const { pageIdx, setPageIdx, pageCount } = useTvPager(
-    beers.length,
-    pageSize,
-    tv?.rotate ?? false,
-    tv?.rotateSeconds ?? 12
-  );
-  const pageBeers = chunk(beers, pageSize)[pageIdx] ?? [];
-  const cols = tv
-    ? gridCols(pageBeers.length, true, true, tv.columns)
-    : t.compact
-      ? 1
-      : gridCols(beers.length, isMd, isTv, 3);
+  const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 3);
   return (
-    <section className={tv ? "flex min-h-0 flex-1 flex-col" : undefined}>
+    <section>
       <SectionHeader
         t={t}
         title="Fermenting"
         icon={<CarboyIcon className="h-7 w-auto" />}
       />
-      <div
-        key={pageIdx}
-        className={tv ? "animate-pagefade flex min-h-0 flex-1 flex-col" : undefined}
-      >
       <ul
-        className={tv ? "tv-pour-list min-h-0 flex-1 gap-5" : "grid gap-5"}
-        style={
-          tv
-            ? ({ "--tv-cols": tv.columns } as CSSProperties)
-            : { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }
-        }
+        className="grid gap-5"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
-        {pageBeers.map((beer) => (
+        {beers.map((beer) => (
           <li key={beer.id} className={t.card}>
             {t.cardShine && <div aria-hidden className={t.cardShine} />}
             <CarboyIcon
@@ -508,15 +821,6 @@ function FermentingSection({
           </li>
         ))}
       </ul>
-      </div>
-      {tv && (
-        <TvDots
-          pageCount={pageCount}
-          pageIdx={pageIdx}
-          setPageIdx={setPageIdx}
-          label="Fermenting"
-        />
-      )}
     </section>
   );
 }
@@ -527,48 +831,26 @@ function ComingSoonSection({
   isMd,
   isTv,
   showDescriptions,
-  tv,
 }: {
   beers: ApiBeer[];
   t: ThemeStyles;
   isMd: boolean;
   isTv: boolean;
   showDescriptions: boolean;
-  tv?: TvConfig;
 }) {
-  const pageSize = tv ? Math.max(1, tv.columns * tvRows(t)) : Math.max(1, beers.length);
-  const { pageIdx, setPageIdx, pageCount } = useTvPager(
-    beers.length,
-    pageSize,
-    tv?.rotate ?? false,
-    tv?.rotateSeconds ?? 12
-  );
-  const pageBeers = chunk(beers, pageSize)[pageIdx] ?? [];
-  const cols = tv
-    ? gridCols(pageBeers.length, true, true, tv.columns)
-    : t.compact
-      ? 1
-      : gridCols(beers.length, isMd, isTv, 3);
+  const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 3);
   return (
-    <section className={tv ? "flex min-h-0 flex-1 flex-col" : undefined}>
+    <section>
       <SectionHeader
         t={t}
         title="Coming Soon"
         icon={<ClockIcon className="h-6 w-6" />}
       />
-      <div
-        key={pageIdx}
-        className={tv ? "animate-pagefade flex min-h-0 flex-1 flex-col" : undefined}
-      >
       <ul
-        className={tv ? "tv-pour-list min-h-0 flex-1 gap-5" : "grid gap-5"}
-        style={
-          tv
-            ? ({ "--tv-cols": tv.columns } as CSSProperties)
-            : { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }
-        }
+        className="grid gap-5"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
-        {pageBeers.map((beer) => (
+        {beers.map((beer) => (
           <li key={beer.id} className={t.mutedCard}>
             {t.cardShine && <div aria-hidden className={t.cardShine} />}
             <BeerVisual beer={beer} ghost />
@@ -583,15 +865,6 @@ function ComingSoonSection({
           </li>
         ))}
       </ul>
-      </div>
-      {tv && (
-        <TvDots
-          pageCount={pageCount}
-          pageIdx={pageIdx}
-          setPageIdx={setPageIdx}
-          label="Coming Soon"
-        />
-      )}
     </section>
   );
 }
@@ -638,16 +911,6 @@ export default function TapListPage() {
           setRotateSeconds(Math.min(120, Math.max(5, rs as number)));
         }
       }
-      if (settings.columns && typeof settings.columns === "object") {
-        const c = settings.columns as Record<string, unknown>;
-        const clamp = (n: unknown, dflt: number) =>
-          Number.isInteger(n)
-            ? Math.min(4, Math.max(1, n as number))
-            : dflt;
-        setOnTapColumns(clamp(c.onTap, 4));
-        setFermentingColumns(clamp(c.fermenting, 2));
-        setComingSoonColumns(clamp(c.comingSoon, 2));
-      }
       if (typeof settings.showDescriptions === "boolean") {
         setShowDescriptions(settings.showDescriptions);
       }
@@ -690,9 +953,6 @@ export default function TapListPage() {
   const [rotate, setRotate] = useState(true);
   const [rotateSeconds, setRotateSeconds] = useState(12);
   const [cheersEnabled, setCheersEnabled] = useState(true);
-  const [onTapColumns, setOnTapColumns] = useState(4);
-  const [fermentingColumns, setFermentingColumns] = useState(2);
-  const [comingSoonColumns, setComingSoonColumns] = useState(2);
   // Paging/rotation is a TV affair; smaller screens show the whole list.
   const [isTv, setIsTv] = useState(false);
   const [isMd, setIsMd] = useState(false);
@@ -795,39 +1055,16 @@ export default function TapListPage() {
 
         {beers !== null && !error && hasAny && (
           isTv ? (
-            <div className="flex min-h-0 flex-1 flex-col gap-6 2xl:gap-8">
-              {onTap.length > 0 && (
-                <OnTapSection
-                  beers={onTap}
-                  t={t}
-                  cheersEnabled={cheersEnabled}
-                  isMd={isMd}
-                  isTv={isTv}
-                  showDescriptions={showDescriptions}
-                  tv={{ columns: onTapColumns, rotate, rotateSeconds }}
-                />
-              )}
-              {fermenting.length > 0 && (
-                <FermentingSection
-                  beers={fermenting}
-                  t={t}
-                  isMd={isMd}
-                  isTv={isTv}
-                  showDescriptions={showDescriptions}
-                  tv={{ columns: fermentingColumns, rotate, rotateSeconds }}
-                />
-              )}
-              {comingSoon.length > 0 && (
-                <ComingSoonSection
-                  beers={comingSoon}
-                  t={t}
-                  isMd={isMd}
-                  isTv={isTv}
-                  showDescriptions={showDescriptions}
-                  tv={{ columns: comingSoonColumns, rotate, rotateSeconds }}
-                />
-              )}
-            </div>
+            <TvBoard
+              onTap={onTap}
+              fermenting={fermenting}
+              comingSoon={comingSoon}
+              t={t}
+              cheersEnabled={cheersEnabled}
+              showDescriptions={showDescriptions}
+              rotate={rotate}
+              rotateSeconds={rotateSeconds}
+            />
           ) : (
             <div className="space-y-12">
               {onTap.length > 0 && (

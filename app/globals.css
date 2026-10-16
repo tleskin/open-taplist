@@ -125,21 +125,6 @@ body {
   background-position: center;
 }
 
-/* ---------- TV band pour lists ----------
-   Flexbox (not grid) so cards keep a fixed fractional size: with fewer
-   pours than columns, the row centers instead of stretching one card
-   across the screen. --tv-cols is set inline per section. */
-.tv-pour-list {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-content: stretch;
-}
-.tv-pour-list > li {
-  flex: 0 0 calc((100% - (var(--tv-cols, 1) - 1) * 1.25rem) / var(--tv-cols, 1));
-  min-width: 0;
-}
-
 /* TV page rotation: soft fade/slide when a section turns the page. */
 @keyframes pagefade {
   from {
