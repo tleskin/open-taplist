@@ -16,7 +16,6 @@ theme, cheer a beer. The demo reseeds itself with sample data whenever its
 database is empty, so don't be surprised if your experiments vanish.
 
 ![Tap list on a TV](screenshots/taplist-tv.png)
-![Tap list on a phone](screenshots/taplist-mobile.png)
 ![Admin dashboard](screenshots/admin.png)
 
 ## Features
