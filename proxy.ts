@@ -42,8 +42,6 @@ function checkAuth(authHeader: string, username: string, password: string) {
 }
 
 export function proxy(request: NextRequest) {
-  if (process.env.DEMO_MODE === "true") return NextResponse.next();
-
   const password = process.env.ADMIN_PASSWORD;
   if (!password) return NextResponse.next();
 

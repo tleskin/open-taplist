@@ -84,11 +84,22 @@ const sampleBeers: NewBeer[] = [
 ];
 
 async function main() {
+  const force = process.argv.includes("--force");
   const db = getDb();
-  console.log("Clearing beers and reseeding...");
-  await db.delete(beers);
-  await db.insert(beers).values(sampleBeers);
-  console.log(`Inserted ${sampleBeers.length} beers.`);
+
+  const existing = await db.select({ id: beers.id }).from(beers).limit(1);
+  if (existing.length > 0 && !force) {
+    console.log("Beers table already has data — skipping seed (use --force to reseed).");
+  } else {
+    if (force && existing.length > 0) {
+      console.log("Clearing beers and reseeding...");
+      await db.delete(beers);
+    } else {
+      console.log("Seeding sample beers...");
+    }
+    await db.insert(beers).values(sampleBeers);
+    console.log(`Inserted ${sampleBeers.length} beers.`);
+  }
 
   console.log("Seeding default settings...");
   await db

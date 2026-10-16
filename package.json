@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "if [ \"$DEMO_MODE\" = \"true\" ] && [ -n \"$DATABASE_URL$POSTGRES_URL\" ]; then npm run db:migrate && npm run db:seed; fi && next build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",

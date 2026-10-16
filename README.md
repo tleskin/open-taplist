@@ -6,6 +6,15 @@
 An open-source tap list display for homebrewers. Put it on a TV in the garage,
 manage what's on tap from your phone.
 
+## Live demo
+
+Try it here: **https://open-taplist-demo.vercel.app**
+
+Admin login — username `demo`, password `demo`. Poke around: add a pour,
+restyle the theme, cheer a beer. The demo reseeds itself with sample data
+whenever its database is empty, so don't be surprised if your experiments
+vanish.
+
 ## Features
 
 - **TV-friendly tap list** (`/`) — big, high-contrast tap cards with pour name,
@@ -74,6 +83,7 @@ npm run db:seed   # optional: sample pours to start with
 | `NEXT_PUBLIC_BREWERY_NAME` | No     | Brewery name shown in the tap list header (default: "My Home Brewery") |
 | `ADMIN_USERNAME`         | No       | Admin login username (default: `admin`)                  |
 | `ADMIN_PASSWORD`         | No       | Admin login password — set this to protect `/admin` (see below) |
+| `DEMO_MODE`              | No       | Set to `true` on a demo instance: shows a Demo badge, and the Vercel build runs migrations + seeds sample data if the database is empty |
 | `POSTGRES_USER`          | No       | Docker Compose only — Postgres user (default: `taplist`) |
 | `POSTGRES_PASSWORD`      | No       | Docker Compose only — Postgres password                  |
 | `POSTGRES_DB`            | No       | Docker Compose only — Postgres database (default: `taplist`) |
@@ -95,7 +105,7 @@ button above prompts for it.
 - Schema lives in `db/schema.ts`; migrations in `drizzle/`.
 - `npm run db:generate` — generate a migration from schema changes
 - `npm run db:migrate` — apply migrations (`DATABASE_URL` must be set)
-- `npm run db:seed` — insert sample homebrews to start with
+- `npm run db:seed` — insert sample homebrews (skips if any exist; `--force` to reseed)
 
 ## Contributing
 
