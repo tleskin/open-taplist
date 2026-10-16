@@ -8,10 +8,10 @@ manage what's on tap from your phone.
 
 ## Features
 
-- **TV-friendly tap list** (`/`) — big, high-contrast tap cards with beer name,
+- **TV-friendly tap list** (`/`) — big, high-contrast tap cards with pour name,
   style, ABV, IBU, and tasting notes. Polls for updates every 30 seconds, so the
   display stays fresh with no refresh button mashing.
-- **Admin panel** (`/admin`) — add, edit, delete, and toggle beers on/off tap.
+- **Admin panel** (`/admin`) — add, edit, delete, and toggle pours on/off tap.
   Changes appear on the display automatically.
 - **Custom brewery name** via the `NEXT_PUBLIC_BREWERY_NAME` env var.
 - **One-step deploys** — a Vercel Deploy button for hosted use, and Docker
@@ -30,7 +30,7 @@ cp .env.example .env
 # 2. Start Postgres + the app
 docker compose up --build -d
 
-# 3. Run migrations + seed sample beers (needs a local DATABASE_URL)
+# 3. Run migrations + seed sample pours (needs a local DATABASE_URL)
 export DATABASE_URL=postgres://taplist:taplist@localhost:5432/taplist
 npm run db:migrate
 npm run db:seed
@@ -63,7 +63,7 @@ brewery's name. Then run the migration once against your production database:
 
 ```bash
 DATABASE_URL="<your-production-url>" npm run db:migrate
-npm run db:seed   # optional: sample beers to start with
+npm run db:seed   # optional: sample pours to start with
 ```
 
 ## Environment variables
@@ -81,7 +81,7 @@ npm run db:seed   # optional: sample beers to start with
 - Schema lives in `db/schema.ts`; migrations in `drizzle/`.
 - `npm run db:generate` — generate a migration from schema changes
 - `npm run db:migrate` — apply migrations (`DATABASE_URL` must be set)
-- `npm run db:seed` — insert 4 sample homebrew beers
+- `npm run db:seed` — insert sample homebrews to start with
 
 ## Contributing
 

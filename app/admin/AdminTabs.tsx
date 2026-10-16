@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 
 const TABS = [
-  { id: "beers", label: "Beers" },
+  { id: "beers", label: "Pours" },
   { id: "settings", label: "Site settings" },
 ] as const;
 

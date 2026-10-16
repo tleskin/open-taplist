@@ -298,7 +298,7 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold">
-            {editingId === null ? "Add a beer" : "Edit beer"}
+            {editingId === null ? "Add a pour" : "Edit pour"}
           </h2>
           {!showForm && (
             <button
@@ -306,7 +306,7 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
               onClick={startAdd}
               className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-bold text-zinc-950 hover:bg-amber-400"
             >
-              + New beer
+              + New pour
             </button>
           )}
         </div>
@@ -544,7 +544,7 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
           </form>
         ) : (
           <p className="text-sm text-zinc-500">
-            Click “New beer” to put something on tap, or Edit on any row to
+            Click “New pour” to put something on tap, or Edit on any row to
             change it.
           </p>
         )}
@@ -556,7 +556,7 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
           <thead>
             <tr className="border-b border-zinc-800 text-xs uppercase tracking-widest text-zinc-500">
               <th className="px-4 py-3">Tap</th>
-              <th className="px-4 py-3">Beer</th>
+              <th className="px-4 py-3">Pour</th>
               <th className="px-4 py-3">Style</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">SRM</th>
@@ -570,7 +570,7 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
             {initialBeers.length === 0 && (
               <tr>
                 <td colSpan={9} className="px-4 py-10 text-center text-zinc-500">
-                  No beers yet — add your first one below.
+                  No pours yet — add your first one below.
                 </td>
               </tr>
             )}
