@@ -47,6 +47,16 @@ export function proxy(request: NextRequest) {
   const password = process.env.ADMIN_PASSWORD;
   if (!password) return NextResponse.next();
 
+  const { pathname } = request.nextUrl;
+  // Reads stay public (the TV display polls them); only the admin dashboard
+  // and settings writes require a login. Cheers stay public by design —
+  // that endpoint has its own rate limiting.
+  const needsAuth =
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/") ||
+    (pathname === "/api/settings" && request.method !== "GET");
+  if (!needsAuth) return NextResponse.next();
+
   const username = process.env.ADMIN_USERNAME || "admin";
   const authHeader = request.headers.get("authorization") ?? "";
   if (checkAuth(authHeader, username, password)) {
@@ -60,5 +70,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/settings", "/api/beers/:path*/cheers"],
+  matcher: ["/admin/:path*", "/api/settings"],
 };

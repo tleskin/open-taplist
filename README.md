@@ -82,8 +82,9 @@ npm run db:seed   # optional: sample pours to start with
 
 The admin dashboard (`/admin`) uses HTTP Basic Auth. Set `ADMIN_PASSWORD`
 (and optionally `ADMIN_USERNAME`, default `admin`) and the browser will ask
-for the login once, then remember it. This covers the dashboard and every
-write endpoint (settings, cheers).
+for the login once, then remember it. This covers the dashboard and settings
+writes. The tap list itself and the cheers button stay public — cheers have
+their own rate limiting.
 
 If `ADMIN_PASSWORD` is not set, the admin stays open — fine for a garage LAN,
 but set a password for any publicly reachable deploy. The Vercel deploy
