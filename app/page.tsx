@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import type { Beer, BeerStatus } from "@/db/schema";
 import BeerGlass from "@/components/BeerGlass";
 import CarboyIcon from "@/components/CarboyIcon";
+import SplashScreen from "@/components/SplashScreen";
 import { srmToHex } from "@/lib/srm";
 import {
   resolveTheme,
@@ -401,6 +402,17 @@ export default function TapListPage() {
   const [cheersEnabled, setCheersEnabled] = useState(true);
   // Paging/rotation is a TV affair; smaller screens show the whole list.
   const [isTv, setIsTv] = useState(false);
+  // Branded splash: always shows for ~2.2s on initial load, then fades.
+  const [splashFaded, setSplashFaded] = useState(false);
+  const [splashGone, setSplashGone] = useState(false);
+  useEffect(() => {
+    const fadeTimer = setTimeout(() => setSplashFaded(true), 2200);
+    const goneTimer = setTimeout(() => setSplashGone(true), 2750);
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(goneTimer);
+    };
+  }, []);
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1536px)");
     const update = () => setIsTv(mq.matches);
@@ -427,6 +439,16 @@ export default function TapListPage() {
 
   return (
     <div className={t.page} style={themeVars as CSSProperties | undefined}>
+      {!splashGone && (
+        <div
+          aria-hidden={splashFaded}
+          className={`fixed inset-0 z-[100] transition-opacity duration-500 ${
+            splashFaded ? "pointer-events-none opacity-0" : "opacity-100"
+          }`}
+        >
+          <SplashScreen />
+        </div>
+      )}
       {themeRef === "liquid-glass" && (
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <div className="absolute -top-32 left-1/4 h-96 w-96 rounded-full bg-amber-500/25 blur-[120px]" />
