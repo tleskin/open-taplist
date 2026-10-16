@@ -271,6 +271,28 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
         )
       : undefined;
 
+  // Live form validity: the save button stays greyed out until every
+  // server-side criterion is met (the server still re-validates).
+  const abvNum = Number(form.abv);
+  const ibuNum = Number(form.ibu);
+  const srmNum = Number(form.srm);
+  const formValid =
+    form.name.trim() !== "" &&
+    form.style.trim() !== "" &&
+    form.abv.trim() !== "" &&
+    Number.isFinite(abvNum) &&
+    abvNum >= 0 &&
+    abvNum <= 100 &&
+    (form.ibu.trim() === "" ||
+      (Number.isInteger(ibuNum) && ibuNum >= 0)) &&
+    (form.srm.trim() === "" ||
+      (Number.isFinite(srmNum) && srmNum >= 1 && srmNum <= 40)) &&
+    (form.status !== "on_tap" ||
+      (formTapNumber !== null &&
+        Number.isInteger(formTapNumber) &&
+        formTapNumber >= 1 &&
+        !tapClash));
+
   return (
     <div className="space-y-8">
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6">
@@ -344,8 +366,8 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
                 />
                 {tapClash && (
                   <p className="mt-1 text-xs text-amber-300">
-                    Heads up: tap {formTapNumber} is already poured by{" "}
-                    {tapClash.name}.
+                    Tap {formTapNumber} is already poured by {tapClash.name}{" "}
+                    — pick another to save.
                   </p>
                 )}
               </div>
@@ -501,7 +523,8 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
             <div className="flex gap-3 sm:col-span-2">
               <button
                 type="submit"
-                disabled={isPending}
+                disabled={isPending || !formValid}
+                title={formValid ? undefined : "Fill in the required fields to save"}
                 className="rounded-lg bg-amber-500 px-5 py-2 text-sm font-bold text-zinc-950 hover:bg-amber-400 disabled:opacity-50"
               >
                 {isPending

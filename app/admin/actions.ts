@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   BEER_STATUSES,
@@ -74,8 +74,24 @@ function refresh() {
   revalidatePath("/api/beers");
 }
 
+/** Throw if another on-tap beer already pours this tap number. */
+async function assertTapFree(tapNumber: number, excludeId: number | null) {
+  const db = getDb();
+  const clashes = await db
+    .select({ id: beers.id, name: beers.name })
+    .from(beers)
+    .where(and(eq(beers.status, "on_tap"), eq(beers.tapNumber, tapNumber)));
+  const other = clashes.find((b) => b.id !== excludeId);
+  if (other) {
+    throw new Error(`Tap ${tapNumber} is already poured by "${other.name}".`);
+  }
+}
+
 export async function createBeer(input: BeerInput) {
   validate(input);
+  if (input.status === "on_tap") {
+    await assertTapFree(input.tapNumber, null);
+  }
   const db = getDb();
   await db.insert(beers).values({
     name: input.name.trim(),
@@ -95,6 +111,9 @@ export async function createBeer(input: BeerInput) {
 
 export async function updateBeer(id: number, input: BeerInput) {
   validate(input);
+  if (input.status === "on_tap") {
+    await assertTapFree(input.tapNumber, id);
+  }
   const db = getDb();
   await db
     .update(beers)
