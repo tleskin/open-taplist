@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   BEER_STATUSES,
   GLASS_TYPES,
@@ -131,6 +131,48 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
   const [isPending, startTransition] = useTransition();
   const [labelDragging, setLabelDragging] = useState(false);
   const labelFileRef = useRef<HTMLInputElement>(null);
+  // Row actions menu (fixed-positioned so the table's horizontal scroll
+  // never clips it).
+  const [menuBeer, setMenuBeer] = useState<Beer | null>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+
+  function closeMenu() {
+    setMenuBeer(null);
+  }
+
+  function toggleMenu(e: React.MouseEvent<HTMLButtonElement>, beer: Beer) {
+    e.stopPropagation();
+    if (menuBeer?.id === beer.id) {
+      closeMenu();
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const menuW = 176;
+    const menuH = 132;
+    const top =
+      rect.bottom + 6 + menuH > window.innerHeight
+        ? rect.top - menuH - 6
+        : rect.bottom + 6;
+    setMenuPos({
+      top: Math.max(8, top),
+      left: Math.max(8, rect.right - menuW),
+    });
+    setMenuBeer(beer);
+  }
+
+  useEffect(() => {
+    if (menuBeer === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeMenu();
+    };
+    const onScroll = () => closeMenu();
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onScroll, true);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+  }, [menuBeer]);
 
   function startAdd() {
     setEditingId(null);
@@ -672,27 +714,13 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
                 <td className="px-4 py-3 text-right">
                   <button
                     type="button"
+                    aria-label={`Actions for ${beer.name}`}
+                    aria-expanded={menuBeer?.id === beer.id}
                     disabled={isPending}
-                    onClick={() => startClone(beer)}
-                    className="mr-2 rounded-lg border border-zinc-700 px-3 py-1 text-xs font-semibold text-zinc-200 hover:border-sky-500"
+                    onClick={(e) => toggleMenu(e, beer)}
+                    className="rounded-lg border border-zinc-700 px-3 py-1 font-bold text-zinc-200 hover:border-amber-500 disabled:opacity-50"
                   >
-                    Clone
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => startEdit(beer)}
-                    className="mr-2 rounded-lg border border-zinc-700 px-3 py-1 text-xs font-semibold text-zinc-200 hover:border-amber-500"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => onDelete(beer.id, beer.name)}
-                    className="rounded-lg border border-zinc-700 px-3 py-1 text-xs font-semibold text-red-300 hover:border-red-500"
-                  >
-                    Delete
+                    ⋮
                   </button>
                 </td>
               </tr>
@@ -700,6 +728,62 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
           </tbody>
         </table>
         </section>
+      )}
+      {menuBeer !== null && (
+        <>
+          <button
+            aria-hidden
+            tabIndex={-1}
+            onClick={closeMenu}
+            className="fixed inset-0 z-40 cursor-default"
+          />
+          <div
+            role="menu"
+            aria-label={`Actions for ${menuBeer.name}`}
+            className="fixed z-50 w-44 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 py-1 shadow-xl"
+            style={{ top: menuPos.top, left: menuPos.left }}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              disabled={isPending}
+              onClick={() => {
+                const b = menuBeer;
+                closeMenu();
+                startClone(b);
+              }}
+              className="block w-full px-4 py-2.5 text-left text-sm font-semibold text-zinc-200 hover:bg-zinc-800 disabled:opacity-50"
+            >
+              Clone
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              disabled={isPending}
+              onClick={() => {
+                const b = menuBeer;
+                closeMenu();
+                startEdit(b);
+              }}
+              className="block w-full px-4 py-2.5 text-left text-sm font-semibold text-zinc-200 hover:bg-zinc-800 disabled:opacity-50"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              disabled={isPending}
+              onClick={() => {
+                const b = menuBeer;
+                closeMenu();
+                onDelete(b.id, b.name);
+              }}
+              className="block w-full px-4 py-2.5 text-left text-sm font-semibold text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+            >
+              Delete
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
