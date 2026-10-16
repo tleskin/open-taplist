@@ -43,7 +43,12 @@ function checkAuth(authHeader: string, username: string, password: string) {
 
 export function proxy(request: NextRequest) {
   // The public demo instance is a playground: no login, disposable data.
-  if (process.env.DEMO_MODE === "true") return NextResponse.next();
+  // (Accepts the NEXT_PUBLIC_ variant too — see the footer badge.)
+  if (
+    process.env.DEMO_MODE === "true" ||
+    process.env.NEXT_PUBLIC_DEMO_MODE === "true"
+  )
+    return NextResponse.next();
 
   const password = process.env.ADMIN_PASSWORD;
   if (!password) return NextResponse.next();

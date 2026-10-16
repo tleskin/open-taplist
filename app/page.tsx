@@ -565,7 +565,7 @@ export default function TapListPage() {
       <footer className={`relative ${t.footer}`}>
         <p>
           © {year} OpenTaplist · Brewed with love 🍻
-          {process.env.DEMO_MODE === "true" && (
+          {process.env.NEXT_PUBLIC_DEMO_MODE === "true" && (
             <>
               <span className="ml-2 rounded-full border border-amber-400/50 px-2 py-0.5 text-xs font-semibold text-amber-300">
                 Demo

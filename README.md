@@ -86,7 +86,7 @@ npm run db:seed   # optional: sample pours to start with
 | `NEXT_PUBLIC_BREWERY_NAME` | No     | Brewery name shown in the tap list header (default: "My Home Brewery") |
 | `ADMIN_USERNAME`         | No       | Admin login username (default: `admin`)                  |
 | `ADMIN_PASSWORD`         | No       | Admin login password — set this to protect `/admin` (see below) |
-| `DEMO_MODE`              | No       | Set to `true` on a demo instance: skips admin auth, shows a Demo badge + admin link, and the Vercel build runs migrations + seeds sample data if the database is empty |
+| `NEXT_PUBLIC_DEMO_MODE`  | No       | Set to `true` on a demo instance: skips admin auth, shows a Demo badge + admin link, and the Vercel build runs migrations + seeds sample data if the database is empty. (The non-public `DEMO_MODE` also works for the server-side parts, but the badge needs the `NEXT_PUBLIC_` prefix to reach the browser.) |
 | `POSTGRES_USER`          | No       | Docker Compose only — Postgres user (default: `taplist`) |
 | `POSTGRES_PASSWORD`      | No       | Docker Compose only — Postgres password                  |
 | `POSTGRES_DB`            | No       | Docker Compose only — Postgres database (default: `taplist`) |
