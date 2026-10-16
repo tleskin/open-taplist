@@ -23,7 +23,6 @@ const POLL_INTERVAL_MS = 30_000;
 // TV paging: On Tap is chunked into full-screen pages; Fermenting + Coming
 // Soon share a final page. Pages auto-rotate with a fade when there is more
 // than one.
-const ROTATE_MS = 12_000;
 const ON_TAP_PAGE_SIZE = 4;
 
 function chunk<T>(arr: T[], size: number): T[][] {
@@ -102,7 +101,92 @@ function BeerStats({ beer, t }: { beer: ApiBeer; t: ThemeStyles }) {  return (
   );
 }
 
-function OnTapCard({ beer, t }: { beer: ApiBeer; t: ThemeStyles }) {
+function CheersButton({
+  beerId,
+  count: initialCount,
+}: {
+  beerId: number;
+  count: number;
+}) {
+  const [count, setCount] = useState(initialCount);
+  const [cheered, setCheered] = useState(false);
+  const [pops, setPops] = useState<number[]>([]);
+
+  // The TV poll refreshes counts live; a poll landing mid-cheer converges
+  // once the POST below resolves with the authoritative count.
+  useEffect(() => {
+    setCount(initialCount);
+  }, [initialCount]);
+
+  useEffect(() => {
+    try {
+      setCheered(window.localStorage.getItem(`cheers:${beerId}`) === "1");
+    } catch {
+      // storage unavailable — cheering still works, just isn't remembered
+    }
+  }, [beerId]);
+
+  async function onCheers() {
+    if (cheered) return;
+    setCheered(true);
+    try {
+      window.localStorage.setItem(`cheers:${beerId}`, "1");
+    } catch {}
+    setCount((c) => c + 1);
+    const popId = Date.now() + Math.random();
+    setPops((prev) => [...prev, popId]);
+    window.setTimeout(() => {
+      setPops((prev) => prev.filter((id) => id !== popId));
+    }, 1100);
+    try {
+      const res = await fetch(`/api/beers/${beerId}/cheers`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof data.cheers === "number") setCount(data.cheers);
+      }
+    } catch {
+      // optimistic count stands
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onCheers}
+      disabled={cheered}
+      aria-label={cheered ? "Cheered!" : "Cheers this pour"}
+      title={cheered ? "Cheered!" : "Cheers this pour"}
+      className={`relative mt-3 inline-flex items-center gap-1.5 rounded-full border border-current px-3 py-1 text-sm font-semibold transition disabled:cursor-default ${
+        cheered ? "opacity-100" : "opacity-60 hover:opacity-100"
+      }`}
+    >
+      <span className="relative inline-block" aria-hidden>
+        &#x1F37B;
+        {pops.map((id) => (
+          <span
+            key={id}
+            className="animate-cheers-pop absolute -top-1 left-1/2 -translate-x-1/2"
+          >
+            &#x1F37B;
+          </span>
+        ))}
+      </span>
+      <span>{count}</span>
+    </button>
+  );
+}
+
+function OnTapCard({
+  beer,
+  t,
+  cheersEnabled,
+}: {
+  beer: ApiBeer;
+  t: ThemeStyles;
+  cheersEnabled: boolean;
+}) {
   return (
     <li className={`${t.card} 2xl:gap-4 2xl:p-5`}>
       {t.cardShine && <div aria-hidden className={t.cardShine} />}
@@ -127,11 +211,122 @@ function OnTapCard({ beer, t }: { beer: ApiBeer; t: ThemeStyles }) {
         </h3>
         <p className={t.styleText}>{beer.style}</p>
         <BeerStats beer={beer} t={t} />
+        {cheersEnabled && (
+          <CheersButton beerId={beer.id} count={beer.cheers ?? 0} />
+        )}
         {beer.description && (
           <p className={`${t.bodyText} 2xl:line-clamp-2`}>{beer.description}</p>
         )}
       </div>
     </li>
+  );
+}
+
+function OnTapSection({
+  beers,
+  t,
+  cheersEnabled,
+}: {
+  beers: ApiBeer[];
+  t: ThemeStyles;
+  cheersEnabled: boolean;
+}) {
+  return (
+    <section>
+      <SectionHeader
+        t={t}
+        title="On Tap"
+        icon={<BeerGlass glass="pint" srm={6} className="h-7 w-auto" />}
+      />
+      <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-4">
+        {beers.map((beer) => (
+          <OnTapCard
+            key={beer.id}
+            beer={beer}
+            t={t}
+            cheersEnabled={cheersEnabled}
+          />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function FermentingSection({
+  beers,
+  t,
+}: {
+  beers: ApiBeer[];
+  t: ThemeStyles;
+}) {
+  return (
+    <section>
+      <SectionHeader
+        t={t}
+        title="Fermenting"
+        icon={<CarboyIcon className="h-7 w-auto" />}
+      />
+      <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+        {beers.map((beer) => (
+          <li key={beer.id} className={t.card}>
+            {t.cardShine && <div aria-hidden className={t.cardShine} />}
+            <CarboyIcon
+              srm={beer.srm}
+              className="h-24 w-auto shrink-0 opacity-90"
+            />
+            <div className="relative min-w-0">
+              <h3 className="text-2xl font-bold leading-tight">
+                {beer.name}{" "}
+                <span
+                  title={`~${beer.srm ?? "?"} SRM`}
+                  className="inline-block h-4 w-4 rounded-full border border-white/30 align-middle"
+                  style={{ backgroundColor: srmToHex(beer.srm) }}
+                />
+              </h3>
+              <p className={t.styleText}>{beer.style}</p>
+              <BeerStats beer={beer} t={t} />
+              {beer.description && (
+                <p className={t.bodyText}>{beer.description}</p>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function ComingSoonSection({
+  beers,
+  t,
+}: {
+  beers: ApiBeer[];
+  t: ThemeStyles;
+}) {
+  return (
+    <section>
+      <SectionHeader
+        t={t}
+        title="Coming Soon"
+        icon={<ClockIcon className="h-6 w-6" />}
+      />
+      <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+        {beers.map((beer) => (
+          <li key={beer.id} className={t.mutedCard}>
+            {t.cardShine && <div aria-hidden className={t.cardShine} />}
+            <BeerVisual beer={beer} ghost />
+            <div className="relative min-w-0">
+              <h3 className="text-2xl font-bold leading-tight">{beer.name}</h3>
+              <p className={t.styleText}>{beer.style}</p>
+              <BeerStats beer={beer} t={t} />
+              {beer.description && (
+                <p className={t.bodyText}>{beer.description}</p>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -164,6 +359,18 @@ export default function TapListPage() {
       if (typeof settings.breweryName === "string" && settings.breweryName) {
         setBreweryName(settings.breweryName);
       }
+      if (settings.display && typeof settings.display === "object") {
+        if (typeof settings.display.rotate === "boolean") {
+          setRotate(settings.display.rotate);
+        }
+        const rs = settings.display.rotateSeconds;
+        if (Number.isInteger(rs)) {
+          setRotateSeconds(Math.min(120, Math.max(5, rs as number)));
+        }
+      }
+      if (typeof settings.cheersEnabled === "boolean") {
+        setCheersEnabled(settings.cheersEnabled);
+      }
       setBreweryLogo(
         typeof settings.breweryLogo === "string" ? settings.breweryLogo : null
       );
@@ -189,15 +396,19 @@ export default function TapListPage() {
   const hasAny = onTap.length + fermenting.length + comingSoon.length > 0;
 
   const [pageIdx, setPageIdx] = useState(0);
-  // TV widths (2xl) fit 8 compact taps per page; smaller screens get 4.
-  const [perPage, setPerPage] = useState(ON_TAP_PAGE_SIZE);
+  const [rotate, setRotate] = useState(true);
+  const [rotateSeconds, setRotateSeconds] = useState(12);
+  const [cheersEnabled, setCheersEnabled] = useState(true);
+  // Paging/rotation is a TV affair; smaller screens show the whole list.
+  const [isTv, setIsTv] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1536px)");
-    const update = () => setPerPage(mq.matches ? 8 : ON_TAP_PAGE_SIZE);
+    const update = () => setIsTv(mq.matches);
     update();
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
   }, []);
+  const perPage = isTv ? 8 : ON_TAP_PAGE_SIZE;
   const onTapPages = chunk(onTap, perPage);
   const pageCount =
     onTapPages.length + (fermenting.length + comingSoon.length > 0 ? 1 : 0);
@@ -207,12 +418,12 @@ export default function TapListPage() {
   }, [pageCount]);
 
   useEffect(() => {
-    if (pageCount <= 1) return;
+    if (!isTv || !rotate || pageCount <= 1) return;
     const id = setInterval(() => {
       setPageIdx((i) => (i + 1) % pageCount);
-    }, ROTATE_MS);
+    }, rotateSeconds * 1000);
     return () => clearInterval(id);
-  }, [pageCount]);
+  }, [pageCount, isTv, rotate, rotateSeconds]);
 
   return (
     <div className={t.page} style={themeVars as CSSProperties | undefined}>
@@ -268,108 +479,61 @@ export default function TapListPage() {
         )}
 
         {beers !== null && !error && hasAny && (
-          <>
-            <div key={pageIdx} className="animate-pagefade">
-              {pageIdx < onTapPages.length ? (
-                <section>
-                  <SectionHeader
+          isTv ? (
+            <>
+              <div key={pageIdx} className="animate-pagefade">
+                {pageIdx < onTapPages.length ? (
+                  <OnTapSection
+                    beers={onTapPages[pageIdx]}
                     t={t}
-                    title="On Tap"
-                    icon={<BeerGlass glass="pint" srm={6} className="h-7 w-auto" />}
+                    cheersEnabled={cheersEnabled}
                   />
-                  <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-4">
-                    {onTapPages[pageIdx].map((beer) => (
-                      <OnTapCard key={beer.id} beer={beer} t={t} />
-                    ))}
-                  </ul>
-                </section>
-              ) : (
-                <div className="space-y-12">
-                  {fermenting.length > 0 && (
-                    <section>
-                      <SectionHeader
-                        t={t}
-                        title="Fermenting"
-                        icon={<CarboyIcon className="h-7 w-auto" />}
-                      />
-                      <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
-                        {fermenting.map((beer) => (
-                          <li key={beer.id} className={t.card}>
-                            {t.cardShine && (
-                              <div aria-hidden className={t.cardShine} />
-                            )}
-                            <CarboyIcon srm={beer.srm} className="h-24 w-auto shrink-0 opacity-90" />
-                            <div className="relative min-w-0">
-                              <h3 className="text-2xl font-bold leading-tight">
-                                {beer.name}{" "}
-                                <span
-                                  title={`~${beer.srm ?? "?"} SRM`}
-                                  className="inline-block h-4 w-4 rounded-full border border-white/30 align-middle"
-                                  style={{ backgroundColor: srmToHex(beer.srm) }}
-                                />
-                              </h3>
-                              <p className={t.styleText}>{beer.style}</p>
-                              <BeerStats beer={beer} t={t} />
-                              {beer.description && (
-                                <p className={t.bodyText}>{beer.description}</p>
-                              )}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </section>
-                  )}
-
-                  {comingSoon.length > 0 && (
-                    <section>
-                      <SectionHeader
-                        t={t}
-                        title="Coming Soon"
-                        icon={<ClockIcon className="h-6 w-6" />}
-                      />
-                      <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
-                        {comingSoon.map((beer) => (
-                          <li key={beer.id} className={t.mutedCard}>
-                            {t.cardShine && (
-                              <div aria-hidden className={t.cardShine} />
-                            )}
-                            <BeerVisual beer={beer} ghost />
-                            <div className="relative min-w-0">
-                              <h3 className="text-2xl font-bold leading-tight">
-                                {beer.name}
-                              </h3>
-                              <p className={t.styleText}>{beer.style}</p>
-                              <BeerStats beer={beer} t={t} />
-                              {beer.description && (
-                                <p className={t.bodyText}>{beer.description}</p>
-                              )}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </section>
-                  )}
+                ) : (
+                  <div className="space-y-12">
+                    {fermenting.length > 0 && (
+                      <FermentingSection beers={fermenting} t={t} />
+                    )}
+                    {comingSoon.length > 0 && (
+                      <ComingSoonSection beers={comingSoon} t={t} />
+                    )}
+                  </div>
+                )}
+              </div>
+              {pageCount > 1 && (
+                <div className="flex justify-center gap-2">
+                  {Array.from({ length: pageCount }, (_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setPageIdx(i)}
+                      aria-label={`Show page ${i + 1}`}
+                      className={`h-2 w-2 rounded-full transition-colors ${
+                        i === pageIdx
+                          ? "bg-amber-400"
+                          : "bg-current opacity-25 hover:opacity-60"
+                      }`}
+                    />
+                  ))}
                 </div>
               )}
+            </>
+          ) : (
+            <div className="space-y-12">
+              {onTap.length > 0 && (
+                <OnTapSection
+                  beers={onTap}
+                  t={t}
+                  cheersEnabled={cheersEnabled}
+                />
+              )}
+              {fermenting.length > 0 && (
+                <FermentingSection beers={fermenting} t={t} />
+              )}
+              {comingSoon.length > 0 && (
+                <ComingSoonSection beers={comingSoon} t={t} />
+              )}
             </div>
-            {pageCount > 1 && (
-              <div className="flex justify-center gap-2">
-                {Array.from({ length: pageCount }, (_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setPageIdx(i)}
-                    aria-label={`Show page ${i + 1}`}
-                    className={`h-2 w-2 rounded-full transition-colors ${
-                      i === pageIdx
-                        ? "bg-amber-400"
-                        : "bg-current opacity-25 hover:opacity-60"
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </>
+          )
         )}
       </main>
 

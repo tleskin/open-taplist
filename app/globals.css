@@ -128,3 +128,23 @@ body {
     animation: none;
   }
 }
+
+/* Cheers button: a fresh cheer floats upward like an Instagram heart. */
+@keyframes cheers-pop {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -48px) scale(1.5);
+  }
+}
+.animate-cheers-pop {
+  animation: cheers-pop 1s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-cheers-pop {
+    animation: none;
+  }
+}

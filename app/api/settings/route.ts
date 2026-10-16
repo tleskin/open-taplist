@@ -13,6 +13,15 @@ const DEFAULT_BREWERY_NAME = "My Home Brewery";
 const MAX_NAME_LENGTH = 80;
 // ~2MB image file becomes ~2.7MB as a base64 data URL.
 const MAX_LOGO_LENGTH = 2_800_000;
+const DEFAULT_ROTATE_SECONDS = 12;
+const MIN_ROTATE_SECONDS = 5;
+const MAX_ROTATE_SECONDS = 120;
+
+function parseRotateSeconds(raw: string | null): number {
+  const n = parseInt(raw ?? "", 10);
+  if (!Number.isInteger(n)) return DEFAULT_ROTATE_SECONDS;
+  return Math.min(MAX_ROTATE_SECONDS, Math.max(MIN_ROTATE_SECONDS, n));
+}
 
 function isLogoValue(v: unknown): v is string {
   return (
@@ -35,20 +44,34 @@ function parseCustomThemes(raw: string | null): CustomThemeParams[] {
 
 export async function GET() {
   await connection(); // skip prerendering: reads the live database
-  const [storedTheme, storedName, storedLogo, storedCustom] = await Promise.all(
-    [
-      getSetting("theme"),
-      getSetting("brewery_name"),
-      getSetting("brewery_logo"),
-      getSetting("custom_themes"),
-    ]
-  );
+  const [
+    storedTheme,
+    storedName,
+    storedLogo,
+    storedCustom,
+    storedRotate,
+    storedRotateSecs,
+    storedCheers,
+  ] = await Promise.all([
+    getSetting("theme"),
+    getSetting("brewery_name"),
+    getSetting("brewery_logo"),
+    getSetting("custom_themes"),
+    getSetting("display_rotate"),
+    getSetting("display_rotate_seconds"),
+    getSetting("cheers_enabled"),
+  ]);
   const theme: ThemeId = isThemeId(storedTheme) ? storedTheme : DEFAULT_THEME;
   return Response.json({
     theme: isCustomThemeRef(storedTheme) ? storedTheme : theme,
     breweryName: storedName ?? DEFAULT_BREWERY_NAME,
     breweryLogo: storedLogo ?? null,
     customThemes: parseCustomThemes(storedCustom),
+    display: {
+      rotate: storedRotate !== "false",
+      rotateSeconds: parseRotateSeconds(storedRotateSecs),
+    },
+    cheersEnabled: storedCheers !== "false",
   });
 }
 
@@ -123,6 +146,46 @@ export async function PUT(request: Request) {
     }
     await setSetting("custom_themes", JSON.stringify(list));
     out.customThemes = list;
+  }
+
+  if ("displayRotate" in b) {
+    if (typeof b.displayRotate !== "boolean") {
+      return Response.json(
+        { error: "displayRotate must be a boolean." },
+        { status: 400 }
+      );
+    }
+    await setSetting("display_rotate", b.displayRotate ? "true" : "false");
+    out.displayRotate = b.displayRotate;
+  }
+
+  if ("displayRotateSeconds" in b) {
+    const n = b.displayRotateSeconds;
+    if (
+      !Number.isInteger(n) ||
+      (n as number) < MIN_ROTATE_SECONDS ||
+      (n as number) > MAX_ROTATE_SECONDS
+    ) {
+      return Response.json(
+        {
+          error: `displayRotateSeconds must be an integer ${MIN_ROTATE_SECONDS}–${MAX_ROTATE_SECONDS}.`,
+        },
+        { status: 400 }
+      );
+    }
+    await setSetting("display_rotate_seconds", String(n));
+    out.displayRotateSeconds = n;
+  }
+
+  if ("cheersEnabled" in b) {
+    if (typeof b.cheersEnabled !== "boolean") {
+      return Response.json(
+        { error: "cheersEnabled must be a boolean." },
+        { status: 400 }
+      );
+    }
+    await setSetting("cheers_enabled", b.cheersEnabled ? "true" : "false");
+    out.cheersEnabled = b.cheersEnabled;
   }
 
   return Response.json(out);

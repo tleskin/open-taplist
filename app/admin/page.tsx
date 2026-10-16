@@ -12,6 +12,7 @@ import {
 } from "@/lib/themes";
 import BeerManager from "./BeerManager";
 import BrewerySettings from "./BrewerySettings";
+import DisplaySettings from "./DisplaySettings";
 import ThemeSettings from "./ThemeSettings";
 import AdminTabs from "./AdminTabs";
 
@@ -56,6 +57,14 @@ export default async function AdminPage() {
     "My Home Brewery";
   const breweryLogo = await getSetting("brewery_logo");
 
+  const storedRotate = await getSetting("display_rotate");
+  const storedRotateSecs = await getSetting("display_rotate_seconds");
+  const storedCheers = await getSetting("cheers_enabled");
+  const rotateSeconds = (() => {
+    const n = parseInt(storedRotateSecs ?? "", 10);
+    return Number.isInteger(n) ? Math.min(120, Math.max(5, n)) : 12;
+  })();
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <header className="border-b border-zinc-800 bg-zinc-900/60 px-6 py-6 sm:px-10">
@@ -83,6 +92,11 @@ export default async function AdminPage() {
               <BrewerySettings
                 initialName={breweryName}
                 initialLogo={breweryLogo}
+              />
+              <DisplaySettings
+                initialRotate={storedRotate !== "false"}
+                initialRotateSeconds={rotateSeconds}
+                initialCheersEnabled={storedCheers !== "false"}
               />
               <ThemeSettings
                 initialThemes={customThemes}
