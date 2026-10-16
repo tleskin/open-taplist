@@ -13,6 +13,7 @@ import { srmToHex } from "@/lib/srm";
 import {
   createBeer,
   deleteBeer,
+  moveBeerTap,
   toggleBeerActive,
   updateBeer,
   type BeerInput,
@@ -133,7 +134,7 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
 
   function startAdd() {
     setEditingId(null);
-    setForm(emptyForm);
+    setForm({ ...emptyForm, tapNumber: nextFreeTap() });
     setFormError(null);
     setFormOpen(true);
   }
@@ -147,11 +148,38 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
 
   function startClone(beer: Beer) {
     setEditingId(null);
-    // Copy everything into a fresh add form; the tap number is left blank
-    // so a new one must be chosen deliberately.
-    setForm({ ...toForm(beer), tapNumber: "" });
+    // Copy everything into a fresh add form; suggest the next free tap so
+    // the clone doesn't double up the source's tap number.
+    setForm({
+      ...toForm(beer),
+      tapNumber: beer.status === "on_tap" ? nextFreeTap() : "",
+    });
     setFormError(null);
     setFormOpen(true);
+  }
+
+  /** Smallest positive tap number not currently poured. */
+  function nextFreeTap(): string {
+    const used = new Set(
+      initialBeers
+        .filter((b) => b.status === "on_tap")
+        .map((b) => b.tapNumber)
+    );
+    let n = 1;
+    while (used.has(n)) n++;
+    return String(n);
+  }
+
+  function changeStatus(status: BeerStatus) {
+    setForm((f) => ({
+      ...f,
+      status,
+      // Suggest a tap when switching to on-tap with an empty field.
+      tapNumber:
+        status === "on_tap" && f.tapNumber.trim() === ""
+          ? nextFreeTap()
+          : f.tapNumber,
+    }));
   }
 
   function cancel() {
@@ -216,6 +244,12 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
     });
   }
 
+  async function onMove(id: number, direction: "up" | "down") {
+    startTransition(async () => {
+      await moveBeerTap(id, direction);
+    });
+  }
+
   async function onToggle(id: number, next: boolean) {
     startTransition(async () => {
       await toggleBeerActive(id, next);
@@ -224,6 +258,18 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
 
   const showForm = formOpen;
   const srmPreview = srmToHex(form.srm.trim() === "" ? null : Number(form.srm));
+  // Non-blocking warning when the chosen tap is already poured by another beer.
+  const formTapNumber =
+    form.tapNumber.trim() === "" ? null : Number(form.tapNumber);
+  const tapClash =
+    form.status === "on_tap" && formTapNumber !== null
+      ? initialBeers.find(
+          (b) =>
+            b.status === "on_tap" &&
+            b.tapNumber === formTapNumber &&
+            b.id !== editingId
+        )
+      : undefined;
 
   return (
     <div className="space-y-8">
@@ -273,7 +319,7 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
                 id="status"
                 className={inputClass}
                 value={form.status}
-                onChange={(e) => set("status", e.target.value as BeerStatus)}
+                onChange={(e) => changeStatus(e.target.value as BeerStatus)}
               >
                 {BEER_STATUSES.map((s) => (
                   <option key={s} value={s}>
@@ -296,6 +342,12 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
                   placeholder="1"
                   required
                 />
+                {tapClash && (
+                  <p className="mt-1 text-xs text-amber-300">
+                    Heads up: tap {formTapNumber} is already poured by{" "}
+                    {tapClash.name}.
+                  </p>
+                )}
               </div>
             )}
             <div>
@@ -506,8 +558,36 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
                   beer.isActive ? "" : "opacity-50"
                 }`}
               >
-                <td className="px-4 py-3 font-bold text-amber-400">
-                  {beer.status === "on_tap" ? beer.tapNumber : "—"}
+                <td className="px-4 py-3">
+                  {beer.status === "on_tap" ? (
+                    <span className="flex items-center gap-1">
+                      <span className="w-6 font-bold text-amber-400">
+                        {beer.tapNumber}
+                      </span>
+                      <span className="flex flex-col leading-none">
+                        <button
+                          type="button"
+                          title="Move tap up"
+                          disabled={isPending}
+                          onClick={() => onMove(beer.id, "up")}
+                          className="px-1 text-[10px] text-zinc-500 hover:text-amber-400 disabled:opacity-30"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          title="Move tap down"
+                          disabled={isPending}
+                          onClick={() => onMove(beer.id, "down")}
+                          className="px-1 text-[10px] text-zinc-500 hover:text-amber-400 disabled:opacity-30"
+                        >
+                          ▼
+                        </button>
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-zinc-600">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 font-semibold">
                   <span className="flex items-center gap-2">

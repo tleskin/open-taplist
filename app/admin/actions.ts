@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   BEER_STATUSES,
@@ -127,5 +127,33 @@ export async function toggleBeerActive(id: number, isActive: boolean) {
 export async function deleteBeer(id: number) {
   const db = getDb();
   await db.delete(beers).where(eq(beers.id, id));
+  refresh();
+}
+
+/**
+ * Move an on-tap beer up or down one position by swapping tap numbers
+ * with its neighbor in tap order.
+ */
+export async function moveBeerTap(id: number, direction: "up" | "down") {
+  const db = getDb();
+  const onTap = await db
+    .select()
+    .from(beers)
+    .where(eq(beers.status, "on_tap"))
+    .orderBy(asc(beers.tapNumber), asc(beers.id));
+  const idx = onTap.findIndex((b) => b.id === id);
+  if (idx === -1) throw new Error("Beer not found.");
+  const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+  if (swapIdx < 0 || swapIdx >= onTap.length) return;
+  const a = onTap[idx];
+  const b = onTap[swapIdx];
+  await db
+    .update(beers)
+    .set({ tapNumber: b.tapNumber, updatedAt: new Date() })
+    .where(eq(beers.id, a.id));
+  await db
+    .update(beers)
+    .set({ tapNumber: a.tapNumber, updatedAt: new Date() })
+    .where(eq(beers.id, b.id));
   refresh();
 }
