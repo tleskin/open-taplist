@@ -32,6 +32,15 @@ function chunk<T>(arr: T[], size: number): T[][] {
   return out;
 }
 
+/**
+ * Grid columns for a card row: never more columns than cards, so a short
+ * row spreads across the full width instead of bunching up on the left.
+ */
+function gridCols(count: number, isMd: boolean, isTv: boolean, maxTv: number) {
+  if (!isMd) return 1;
+  return Math.max(1, Math.min(count, isTv ? maxTv : 2));
+}
+
 function ClockIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -188,6 +197,40 @@ function OnTapCard({
   t: ThemeStyles;
   cheersEnabled: boolean;
 }) {
+  if (t.compact) {
+    // Dense taplist.io-style row: tap number, name + stats on one line.
+    return (
+      <li className="flex items-center gap-4 border-b border-white/10 py-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-[#cde64e]/60 text-lg font-black text-[#cde64e]">
+          {beer.tapNumber}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h3 className={`text-xl font-bold leading-tight ${t.nameText}`}>
+              {beer.name}
+            </h3>
+            <p className="text-sm font-medium uppercase tracking-widest text-white/80">
+              {beer.style}
+            </p>
+            <p className="text-sm text-stone-300">
+              <span className={t.statValue}>{beer.abv.toFixed(1)}% ABV</span>
+              {beer.ibu !== null && (
+                <span className="ml-3">
+                  <span className={t.statValue}>{beer.ibu}</span> IBU
+                </span>
+              )}
+            </p>
+            {cheersEnabled && (
+              <CheersButton beerId={beer.id} count={beer.cheers ?? 0} />
+            )}
+          </div>
+          {beer.description && (
+            <p className={`${t.bodyText} line-clamp-2`}>{beer.description}</p>
+          )}
+        </div>
+      </li>
+    );
+  }
   return (
     <li className={`${t.card} 2xl:gap-4 2xl:p-5`}>
       {t.cardShine && <div aria-hidden className={t.cardShine} />}
@@ -227,11 +270,16 @@ function OnTapSection({
   beers,
   t,
   cheersEnabled,
+  isMd,
+  isTv,
 }: {
   beers: ApiBeer[];
   t: ThemeStyles;
   cheersEnabled: boolean;
+  isMd: boolean;
+  isTv: boolean;
 }) {
+  const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 4);
   return (
     <section>
       <SectionHeader
@@ -239,7 +287,10 @@ function OnTapSection({
         title="On Tap"
         icon={<BeerGlass glass="pint" srm={6} className="h-7 w-auto" />}
       />
-      <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-4">
+      <ul
+        className="grid gap-5"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      >
         {beers.map((beer) => (
           <OnTapCard
             key={beer.id}
@@ -256,10 +307,15 @@ function OnTapSection({
 function FermentingSection({
   beers,
   t,
+  isMd,
+  isTv,
 }: {
   beers: ApiBeer[];
   t: ThemeStyles;
+  isMd: boolean;
+  isTv: boolean;
 }) {
+  const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 3);
   return (
     <section>
       <SectionHeader
@@ -267,13 +323,20 @@ function FermentingSection({
         title="Fermenting"
         icon={<CarboyIcon className="h-7 w-auto" />}
       />
-      <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+      <ul
+        className="grid gap-5"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      >
         {beers.map((beer) => (
           <li key={beer.id} className={t.card}>
             {t.cardShine && <div aria-hidden className={t.cardShine} />}
             <CarboyIcon
               srm={beer.srm}
-              className="h-24 w-auto shrink-0 opacity-90"
+              className={
+                t.compact
+                  ? "h-10 w-auto shrink-0 opacity-90"
+                  : "h-24 w-auto shrink-0 opacity-90"
+              }
             />
             <div className="relative min-w-0">
               <h3 className={`text-2xl font-bold leading-tight ${t.nameText}`}>
@@ -300,10 +363,15 @@ function FermentingSection({
 function ComingSoonSection({
   beers,
   t,
+  isMd,
+  isTv,
 }: {
   beers: ApiBeer[];
   t: ThemeStyles;
+  isMd: boolean;
+  isTv: boolean;
 }) {
+  const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 3);
   return (
     <section>
       <SectionHeader
@@ -311,7 +379,10 @@ function ComingSoonSection({
         title="Coming Soon"
         icon={<ClockIcon className="h-6 w-6" />}
       />
-      <ul className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+      <ul
+        className="grid gap-5"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      >
         {beers.map((beer) => (
           <li key={beer.id} className={t.mutedCard}>
             {t.cardShine && <div aria-hidden className={t.cardShine} />}
@@ -402,6 +473,7 @@ export default function TapListPage() {
   const [cheersEnabled, setCheersEnabled] = useState(true);
   // Paging/rotation is a TV affair; smaller screens show the whole list.
   const [isTv, setIsTv] = useState(false);
+  const [isMd, setIsMd] = useState(false);
   // Branded splash: always shows for ~2.2s on initial load, then fades.
   const [splashFaded, setSplashFaded] = useState(false);
   const [splashGone, setSplashGone] = useState(false);
@@ -414,11 +486,19 @@ export default function TapListPage() {
     };
   }, []);
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1536px)");
-    const update = () => setIsTv(mq.matches);
+    const tv = window.matchMedia("(min-width: 1536px)");
+    const md = window.matchMedia("(min-width: 768px)");
+    const update = () => {
+      setIsTv(tv.matches);
+      setIsMd(md.matches);
+    };
     update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
+    tv.addEventListener("change", update);
+    md.addEventListener("change", update);
+    return () => {
+      tv.removeEventListener("change", update);
+      md.removeEventListener("change", update);
+    };
   }, []);
   const perPage = isTv ? 8 : ON_TAP_PAGE_SIZE;
   const onTapPages = chunk(onTap, perPage);
@@ -512,14 +592,16 @@ export default function TapListPage() {
                     beers={onTapPages[pageIdx]}
                     t={t}
                     cheersEnabled={cheersEnabled}
+                    isMd={isMd}
+                    isTv={isTv}
                   />
                 ) : (
                   <div className="space-y-12">
                     {fermenting.length > 0 && (
-                      <FermentingSection beers={fermenting} t={t} />
+                      <FermentingSection beers={fermenting} t={t} isMd={isMd} isTv={isTv} />
                     )}
                     {comingSoon.length > 0 && (
-                      <ComingSoonSection beers={comingSoon} t={t} />
+                      <ComingSoonSection beers={comingSoon} t={t} isMd={isMd} isTv={isTv} />
                     )}
                   </div>
                 )}
@@ -549,13 +631,15 @@ export default function TapListPage() {
                   beers={onTap}
                   t={t}
                   cheersEnabled={cheersEnabled}
+                  isMd={isMd}
+                  isTv={isTv}
                 />
               )}
               {fermenting.length > 0 && (
-                <FermentingSection beers={fermenting} t={t} />
+                <FermentingSection beers={fermenting} t={t} isMd={isMd} isTv={isTv} />
               )}
               {comingSoon.length > 0 && (
-                <ComingSoonSection beers={comingSoon} t={t} />
+                <ComingSoonSection beers={comingSoon} t={t} isMd={isMd} isTv={isTv} />
               )}
             </div>
           )

@@ -129,6 +129,7 @@ function customThemeStyles(cardStyle: CardStyle): ThemeStyles {
     cardShine: null,
     tapBadge: "ctp-tap-badge",
     nameText: "ctp-name-text",
+    compact: false,
     styleText: "ctp-style-text mt-1 text-sm font-medium uppercase tracking-widest",
     statText: "ctp-stat-text mt-2 text-sm",
     statValue: "ctp-stat-value",
@@ -190,6 +191,8 @@ export type ThemeStyles = {
   tapBadge: string;
   /** Pour name heading on tap cards (color, and font for themes that set one). */
   nameText: string;
+  /** Dense list rows instead of large cards — fits more pours per screen. */
+  compact: boolean;
   styleText: string;
   statText: string;
   statValue: string;
@@ -216,6 +219,7 @@ export const themeStyles: Record<ThemeId, ThemeStyles> = {
     tapBadge:
       "flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-3xl font-black text-amber-400",
     nameText: "text-zinc-100",
+    compact: false,
     styleText:
       "mt-1 text-sm font-medium uppercase tracking-widest text-amber-400/90",
     statText: "mt-2 text-sm text-zinc-400",
@@ -247,6 +251,7 @@ export const themeStyles: Record<ThemeId, ThemeStyles> = {
     tapBadge:
       "flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-3xl font-black text-white shadow-inner backdrop-blur-md",
     nameText: "text-white",
+    compact: false,
     styleText:
       "mt-1 text-sm font-medium uppercase tracking-[0.2em] text-white/60",
     statText: "mt-2 text-sm text-white/60",
@@ -277,6 +282,7 @@ export const themeStyles: Record<ThemeId, ThemeStyles> = {
     tapBadge:
       "flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-white/70 bg-white/60 text-3xl font-black text-amber-600 shadow-inner backdrop-blur-md",
     nameText: "text-zinc-900",
+    compact: false,
     styleText:
       "mt-1 text-sm font-medium uppercase tracking-[0.2em] text-amber-700/80",
     statText: "mt-2 text-sm text-zinc-500",
@@ -305,6 +311,7 @@ export const themeStyles: Record<ThemeId, ThemeStyles> = {
     tapBadge:
       "flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-amber-700/10 text-3xl font-black text-amber-700",
     nameText: "text-zinc-900",
+    compact: false,
     styleText:
       "mt-1 text-sm font-medium uppercase tracking-widest text-amber-700/90",
     statText: "mt-2 text-sm text-zinc-600",
@@ -335,6 +342,7 @@ export const themeStyles: Record<ThemeId, ThemeStyles> = {
     tapBadge:
       "flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-[#cde64e]/60 text-3xl font-black text-[#cde64e]",
     nameText: "font-chalk text-[#cde64e]",
+    compact: true,
     styleText:
       "mt-1 text-sm font-medium uppercase tracking-widest text-white/90",
     statText: "mt-2 text-sm text-stone-300",
