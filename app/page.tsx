@@ -66,7 +66,7 @@ function BeerVisual({ beer, ghost }: { beer: ApiBeer; ghost?: boolean }) {
       <img
         src={beer.labelImage}
         alt={`${beer.name} label`}
-        className={`h-24 w-24 shrink-0 rounded-2xl object-contain ${ghostCls}`}
+        className={`h-44 w-44 shrink-0 rounded-2xl object-contain md:h-64 md:w-64 ${ghostCls}`}
       />
     );
   }
@@ -210,8 +210,21 @@ export default function TapListPage() {
                   {t.cardShine && (
                     <div aria-hidden className={t.cardShine} />
                   )}
-                  <div className={t.tapBadge}>{beer.tapNumber}</div>
-                  <BeerVisual beer={beer} />
+                  {beer.labelImage ? (
+                    <div className="relative shrink-0 self-start">
+                      <BeerVisual beer={beer} />
+                      <div
+                        className={`${t.tapBadge} absolute -left-3 -top-3 scale-75`}
+                      >
+                        {beer.tapNumber}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className={t.tapBadge}>{beer.tapNumber}</div>
+                      <BeerVisual beer={beer} />
+                    </>
+                  )}
                   <div className="relative min-w-0">
                     <h3 className="text-2xl font-bold leading-tight">
                       {beer.name}
