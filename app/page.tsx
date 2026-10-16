@@ -192,10 +192,12 @@ function OnTapCard({
   beer,
   t,
   cheersEnabled,
+  isTv,
 }: {
   beer: ApiBeer;
   t: ThemeStyles;
   cheersEnabled: boolean;
+  isTv: boolean;
 }) {
   if (t.compact) {
     // Dense taplist.io-style row: tap number, name + stats on one line.
@@ -224,15 +226,13 @@ function OnTapCard({
               <CheersButton beerId={beer.id} count={beer.cheers ?? 0} />
             )}
           </div>
-          {beer.description && (
-            <p className={`${t.bodyText} line-clamp-2`}>{beer.description}</p>
-          )}
+          {beer.description && <p className={t.bodyText}>{beer.description}</p>}
         </div>
       </li>
     );
   }
   return (
-    <li className={`${t.card} 2xl:gap-4 2xl:p-5`}>
+    <li className={`${t.card} ${isTv ? "items-center" : ""} 2xl:gap-4 2xl:p-5`}>
       {t.cardShine && <div aria-hidden className={t.cardShine} />}
       {beer.labelImage ? (
         <div className="relative shrink-0 self-start">
@@ -258,9 +258,7 @@ function OnTapCard({
         {cheersEnabled && (
           <CheersButton beerId={beer.id} count={beer.cheers ?? 0} />
         )}
-        {beer.description && (
-          <p className={`${t.bodyText} 2xl:line-clamp-2`}>{beer.description}</p>
-        )}
+        {beer.description && <p className={t.bodyText}>{beer.description}</p>}
       </div>
     </li>
   );
@@ -281,15 +279,18 @@ function OnTapSection({
 }) {
   const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 4);
   return (
-    <section>
+    <section className={isTv ? "flex min-h-0 flex-1 flex-col" : undefined}>
       <SectionHeader
         t={t}
         title="On Tap"
         icon={<BeerGlass glass="pint" srm={6} className="h-7 w-auto" />}
       />
       <ul
-        className="grid gap-5"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        className={`grid gap-5 ${isTv ? "min-h-0 flex-1" : ""}`}
+        style={{
+          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+          ...(isTv ? { gridAutoRows: "1fr" } : {}),
+        }}
       >
         {beers.map((beer) => (
           <OnTapCard
@@ -297,6 +298,7 @@ function OnTapSection({
             beer={beer}
             t={t}
             cheersEnabled={cheersEnabled}
+            isTv={isTv}
           />
         ))}
       </ul>
@@ -561,7 +563,11 @@ export default function TapListPage() {
         </div>
       </header>
 
-      <main className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center space-y-12 px-6 py-8 sm:px-10 2xl:max-w-[1720px]">
+      <main
+        className={`relative mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-8 sm:px-10 2xl:max-w-[1720px] ${
+          isTv ? "min-h-0" : "justify-center space-y-12"
+        }`}
+      >
         {error && (
           <div className={t.errorBox}>
             Couldn&apos;t reach the tap list. Check the server connection.
@@ -586,7 +592,10 @@ export default function TapListPage() {
         {beers !== null && !error && hasAny && (
           isTv ? (
             <>
-              <div key={pageIdx} className="animate-pagefade">
+              <div
+                key={pageIdx}
+                className="animate-pagefade flex min-h-0 flex-1 flex-col"
+              >
                 {pageIdx < onTapPages.length ? (
                   <OnTapSection
                     beers={onTapPages[pageIdx]}
@@ -596,7 +605,7 @@ export default function TapListPage() {
                     isTv={isTv}
                   />
                 ) : (
-                  <div className="space-y-12">
+                  <div className="flex min-h-0 flex-1 flex-col justify-evenly gap-8">
                     {fermenting.length > 0 && (
                       <FermentingSection beers={fermenting} t={t} isMd={isMd} isTv={isTv} />
                     )}
