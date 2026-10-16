@@ -51,7 +51,7 @@ npm run dev
 
 ## Deploy to Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ftleskin%2Fopen-taplist)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ftleskin%2Fopen-taplist&env=ADMIN_PASSWORD)
 
 > **Note:** the button clones `tleskin/open-taplist`. If you fork the project,
 > update the `repository-url` in the button link above to point at your fork.
@@ -72,9 +72,22 @@ npm run db:seed   # optional: sample pours to start with
 | ------------------------ | -------- | -------------------------------------------------------- |
 | `DATABASE_URL`           | Yes      | Postgres connection string                               |
 | `NEXT_PUBLIC_BREWERY_NAME` | No     | Brewery name shown in the tap list header (default: "My Home Brewery") |
+| `ADMIN_USERNAME`         | No       | Admin login username (default: `admin`)                  |
+| `ADMIN_PASSWORD`         | No       | Admin login password — set this to protect `/admin` (see below) |
 | `POSTGRES_USER`          | No       | Docker Compose only — Postgres user (default: `taplist`) |
 | `POSTGRES_PASSWORD`      | No       | Docker Compose only — Postgres password                  |
 | `POSTGRES_DB`            | No       | Docker Compose only — Postgres database (default: `taplist`) |
+
+## Admin authentication
+
+The admin dashboard (`/admin`) uses HTTP Basic Auth. Set `ADMIN_PASSWORD`
+(and optionally `ADMIN_USERNAME`, default `admin`) and the browser will ask
+for the login once, then remember it. This covers the dashboard and every
+write endpoint (settings, cheers).
+
+If `ADMIN_PASSWORD` is not set, the admin stays open — fine for a garage LAN,
+but set a password for any publicly reachable deploy. The Vercel deploy
+button above prompts for it.
 
 ## Database
 
