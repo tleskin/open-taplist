@@ -22,9 +22,78 @@ const DEFAULT_BREWERY_NAME =
   process.env.NEXT_PUBLIC_BREWERY_NAME ?? "My Home Brewery";
 const POLL_INTERVAL_MS = 30_000;
 // TV paging: On Tap is chunked into full-screen pages; Fermenting + Coming
-// Soon share a final page. Pages auto-rotate with a fade when there is more
-// than one.
-const ON_TAP_PAGE_SIZE = 4;
+/**
+ * TV column mode: the tap list is a single page of section columns
+ * (On Tap | Fermenting | Coming Soon). Each column pages through its own
+ * pours independently with a fade.
+ */
+export type TvConfig = {
+  /** Inner grid columns for the section's pour list (admin setting, 1-4). */
+  columns: number;
+  /** Width of the section column relative to its siblings. */
+  flexClass: string;
+  rotate: boolean;
+  rotateSeconds: number;
+};
+
+/** Rows visible per section column view (doubled for compact themes). */
+function tvRows(t: ThemeStyles) {
+  return t.compact ? 8 : 4;
+}
+
+function useTvPager(
+  count: number,
+  pageSize: number,
+  rotate: boolean,
+  rotateSeconds: number
+) {
+  const pageCount = Math.max(1, Math.ceil(count / pageSize));
+  const [pageIdx, setPageIdx] = useState(0);
+  useEffect(() => {
+    setPageIdx((i) => Math.min(i, pageCount - 1));
+  }, [pageCount]);
+  useEffect(() => {
+    if (!rotate || pageCount <= 1) return;
+    const id = setInterval(
+      () => setPageIdx((i) => (i + 1) % pageCount),
+      rotateSeconds * 1000
+    );
+    return () => clearInterval(id);
+  }, [pageCount, rotate, rotateSeconds]);
+  return { pageIdx, setPageIdx, pageCount };
+}
+
+/** Page dots for a TV section column. */
+function TvDots({
+  pageCount,
+  pageIdx,
+  setPageIdx,
+  label,
+}: {
+  pageCount: number;
+  pageIdx: number;
+  setPageIdx: (i: number) => void;
+  label: string;
+}) {
+  if (pageCount <= 1) return null;
+  return (
+    <div className="mt-3 flex justify-center gap-2">
+      {Array.from({ length: pageCount }, (_, i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => setPageIdx(i)}
+          aria-label={`Show ${label} page ${i + 1}`}
+          className={`h-2 w-2 rounded-full transition-colors ${
+            i === pageIdx
+              ? "bg-amber-400"
+              : "bg-current opacity-25 hover:opacity-60"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
 
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -277,6 +346,7 @@ function OnTapSection({
   isMd,
   isTv,
   showDescriptions,
+  tv,
 }: {
   beers: ApiBeer[];
   t: ThemeStyles;
@@ -284,7 +354,60 @@ function OnTapSection({
   isMd: boolean;
   isTv: boolean;
   showDescriptions: boolean;
+  tv?: TvConfig;
 }) {
+  if (tv) {
+    // TV column mode: this section is one column of the single-page board,
+    // paging through its own pours independently.
+    const pageSize = Math.max(1, tv.columns * tvRows(t));
+    const pages = chunk(beers, pageSize);
+    const { pageIdx, setPageIdx, pageCount } = useTvPager(
+      beers.length,
+      pageSize,
+      tv.rotate,
+      tv.rotateSeconds
+    );
+    const pageBeers = pages[pageIdx] ?? [];
+    const cols = gridCols(pageBeers.length, true, true, tv.columns);
+    return (
+      <section className={`flex min-h-0 flex-col ${tv.flexClass}`}>
+        <SectionHeader
+          t={t}
+          title="On Tap"
+          icon={<BeerGlass glass="pint" srm={6} className="h-7 w-auto" />}
+        />
+        <div
+          key={pageIdx}
+          className="animate-pagefade flex min-h-0 flex-1 flex-col"
+        >
+          <ul
+            className="grid min-h-0 flex-1 gap-5"
+            style={{
+              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+              gridAutoRows: "1fr",
+            }}
+          >
+            {pageBeers.map((beer) => (
+              <OnTapCard
+                key={beer.id}
+                beer={beer}
+                t={t}
+                cheersEnabled={cheersEnabled}
+                isTv
+                showDescriptions={showDescriptions}
+              />
+            ))}
+          </ul>
+        </div>
+        <TvDots
+          pageCount={pageCount}
+          pageIdx={pageIdx}
+          setPageIdx={setPageIdx}
+          label="On Tap"
+        />
+      </section>
+    );
+  }
   const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 4);
   return (
     <section className={isTv ? "flex min-h-0 flex-1 flex-col" : undefined}>
@@ -321,26 +444,47 @@ function FermentingSection({
   isMd,
   isTv,
   showDescriptions,
+  tv,
 }: {
   beers: ApiBeer[];
   t: ThemeStyles;
   isMd: boolean;
   isTv: boolean;
   showDescriptions: boolean;
+  tv?: TvConfig;
 }) {
-  const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 3);
+  const pageSize = tv ? Math.max(1, tv.columns * tvRows(t)) : Math.max(1, beers.length);
+  const { pageIdx, setPageIdx, pageCount } = useTvPager(
+    beers.length,
+    pageSize,
+    tv?.rotate ?? false,
+    tv?.rotateSeconds ?? 12
+  );
+  const pageBeers = chunk(beers, pageSize)[pageIdx] ?? [];
+  const cols = tv
+    ? gridCols(pageBeers.length, true, true, tv.columns)
+    : t.compact
+      ? 1
+      : gridCols(beers.length, isMd, isTv, 3);
   return (
-    <section>
+    <section className={tv ? `flex min-h-0 flex-col ${tv.flexClass}` : undefined}>
       <SectionHeader
         t={t}
         title="Fermenting"
         icon={<CarboyIcon className="h-7 w-auto" />}
       />
-      <ul
-        className="grid gap-5"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      <div
+        key={pageIdx}
+        className={tv ? "animate-pagefade flex min-h-0 flex-1 flex-col" : undefined}
       >
-        {beers.map((beer) => (
+      <ul
+        className={`grid gap-5${tv ? " min-h-0 flex-1" : ""}`}
+        style={{
+          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+          ...(tv ? { gridAutoRows: "1fr" as const } : {}),
+        }}
+      >
+        {pageBeers.map((beer) => (
           <li key={beer.id} className={t.card}>
             {t.cardShine && <div aria-hidden className={t.cardShine} />}
             <CarboyIcon
@@ -369,6 +513,15 @@ function FermentingSection({
           </li>
         ))}
       </ul>
+      </div>
+      {tv && (
+        <TvDots
+          pageCount={pageCount}
+          pageIdx={pageIdx}
+          setPageIdx={setPageIdx}
+          label="Fermenting"
+        />
+      )}
     </section>
   );
 }
@@ -379,26 +532,47 @@ function ComingSoonSection({
   isMd,
   isTv,
   showDescriptions,
+  tv,
 }: {
   beers: ApiBeer[];
   t: ThemeStyles;
   isMd: boolean;
   isTv: boolean;
   showDescriptions: boolean;
+  tv?: TvConfig;
 }) {
-  const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 3);
+  const pageSize = tv ? Math.max(1, tv.columns * tvRows(t)) : Math.max(1, beers.length);
+  const { pageIdx, setPageIdx, pageCount } = useTvPager(
+    beers.length,
+    pageSize,
+    tv?.rotate ?? false,
+    tv?.rotateSeconds ?? 12
+  );
+  const pageBeers = chunk(beers, pageSize)[pageIdx] ?? [];
+  const cols = tv
+    ? gridCols(pageBeers.length, true, true, tv.columns)
+    : t.compact
+      ? 1
+      : gridCols(beers.length, isMd, isTv, 3);
   return (
-    <section>
+    <section className={tv ? `flex min-h-0 flex-col ${tv.flexClass}` : undefined}>
       <SectionHeader
         t={t}
         title="Coming Soon"
         icon={<ClockIcon className="h-6 w-6" />}
       />
-      <ul
-        className="grid gap-5"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      <div
+        key={pageIdx}
+        className={tv ? "animate-pagefade flex min-h-0 flex-1 flex-col" : undefined}
       >
-        {beers.map((beer) => (
+      <ul
+        className={`grid gap-5${tv ? " min-h-0 flex-1" : ""}`}
+        style={{
+          gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+          ...(tv ? { gridAutoRows: "1fr" as const } : {}),
+        }}
+      >
+        {pageBeers.map((beer) => (
           <li key={beer.id} className={t.mutedCard}>
             {t.cardShine && <div aria-hidden className={t.cardShine} />}
             <BeerVisual beer={beer} ghost />
@@ -413,6 +587,15 @@ function ComingSoonSection({
           </li>
         ))}
       </ul>
+      </div>
+      {tv && (
+        <TvDots
+          pageCount={pageCount}
+          pageIdx={pageIdx}
+          setPageIdx={setPageIdx}
+          label="Coming Soon"
+        />
+      )}
     </section>
   );
 }
@@ -459,6 +642,16 @@ export default function TapListPage() {
           setRotateSeconds(Math.min(120, Math.max(5, rs as number)));
         }
       }
+      if (settings.columns && typeof settings.columns === "object") {
+        const c = settings.columns as Record<string, unknown>;
+        const clamp = (n: unknown, dflt: number) =>
+          Number.isInteger(n)
+            ? Math.min(4, Math.max(1, n as number))
+            : dflt;
+        setOnTapColumns(clamp(c.onTap, 2));
+        setFermentingColumns(clamp(c.fermenting, 1));
+        setComingSoonColumns(clamp(c.comingSoon, 1));
+      }
       if (typeof settings.showDescriptions === "boolean") {
         setShowDescriptions(settings.showDescriptions);
       }
@@ -498,10 +691,12 @@ export default function TapListPage() {
   const comingSoon = showComingSoon ? byStatus("coming_soon") : [];
   const hasAny = onTap.length + fermenting.length + comingSoon.length > 0;
 
-  const [pageIdx, setPageIdx] = useState(0);
   const [rotate, setRotate] = useState(true);
   const [rotateSeconds, setRotateSeconds] = useState(12);
   const [cheersEnabled, setCheersEnabled] = useState(true);
+  const [onTapColumns, setOnTapColumns] = useState(2);
+  const [fermentingColumns, setFermentingColumns] = useState(1);
+  const [comingSoonColumns, setComingSoonColumns] = useState(1);
   // Paging/rotation is a TV affair; smaller screens show the whole list.
   const [isTv, setIsTv] = useState(false);
   const [isMd, setIsMd] = useState(false);
@@ -531,22 +726,6 @@ export default function TapListPage() {
       md.removeEventListener("change", update);
     };
   }, []);
-  const perPage = isTv ? 8 : ON_TAP_PAGE_SIZE;
-  const onTapPages = chunk(onTap, perPage);
-  const pageCount =
-    onTapPages.length + (fermenting.length + comingSoon.length > 0 ? 1 : 0);
-
-  useEffect(() => {
-    setPageIdx((i) => Math.min(i, Math.max(0, pageCount - 1)));
-  }, [pageCount]);
-
-  useEffect(() => {
-    if (!isTv || !rotate || pageCount <= 1) return;
-    const id = setInterval(() => {
-      setPageIdx((i) => (i + 1) % pageCount);
-    }, rotateSeconds * 1000);
-    return () => clearInterval(id);
-  }, [pageCount, isTv, rotate, rotateSeconds]);
 
   return (
     <div
@@ -620,49 +799,54 @@ export default function TapListPage() {
 
         {beers !== null && !error && hasAny && (
           isTv ? (
-            <>
-              <div
-                key={pageIdx}
-                className="animate-pagefade flex min-h-0 flex-1 flex-col"
-              >
-                {pageIdx < onTapPages.length ? (
-                  <OnTapSection
-                    beers={onTapPages[pageIdx]}
-                    t={t}
-                    cheersEnabled={cheersEnabled}
-                    isMd={isMd}
-                    isTv={isTv}
-                    showDescriptions={showDescriptions}
-                  />
-                ) : (
-                  <div className="flex min-h-0 flex-1 flex-col justify-evenly gap-8">
-                    {fermenting.length > 0 && (
-                      <FermentingSection beers={fermenting} t={t} isMd={isMd} isTv={isTv} showDescriptions={showDescriptions} />
-                    )}
-                    {comingSoon.length > 0 && (
-                      <ComingSoonSection beers={comingSoon} t={t} isMd={isMd} isTv={isTv} showDescriptions={showDescriptions} />
-                    )}
-                  </div>
-                )}
-              </div>
-              {pageCount > 1 && (
-                <div className="flex justify-center gap-2">
-                  {Array.from({ length: pageCount }, (_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setPageIdx(i)}
-                      aria-label={`Show page ${i + 1}`}
-                      className={`h-2 w-2 rounded-full transition-colors ${
-                        i === pageIdx
-                          ? "bg-amber-400"
-                          : "bg-current opacity-25 hover:opacity-60"
-                      }`}
-                    />
-                  ))}
-                </div>
+            <div className="flex min-h-0 flex-1 gap-6 2xl:gap-8">
+              {onTap.length > 0 && (
+                <OnTapSection
+                  beers={onTap}
+                  t={t}
+                  cheersEnabled={cheersEnabled}
+                  isMd={isMd}
+                  isTv={isTv}
+                  showDescriptions={showDescriptions}
+                  tv={{
+                    columns: onTapColumns,
+                    flexClass: "flex-[1.5]",
+                    rotate,
+                    rotateSeconds,
+                  }}
+                />
               )}
-            </>
+              {fermenting.length > 0 && (
+                <FermentingSection
+                  beers={fermenting}
+                  t={t}
+                  isMd={isMd}
+                  isTv={isTv}
+                  showDescriptions={showDescriptions}
+                  tv={{
+                    columns: fermentingColumns,
+                    flexClass: "flex-1",
+                    rotate,
+                    rotateSeconds,
+                  }}
+                />
+              )}
+              {comingSoon.length > 0 && (
+                <ComingSoonSection
+                  beers={comingSoon}
+                  t={t}
+                  isMd={isMd}
+                  isTv={isTv}
+                  showDescriptions={showDescriptions}
+                  tv={{
+                    columns: comingSoonColumns,
+                    flexClass: "flex-1",
+                    rotate,
+                    rotateSeconds,
+                  }}
+                />
+              )}
+            </div>
           ) : (
             <div className="space-y-12">
               {onTap.length > 0 && (

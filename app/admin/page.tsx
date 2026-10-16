@@ -64,6 +64,13 @@ export default async function AdminPage() {
   const storedOnTap = await getSetting("show_on_tap");
   const storedFerm = await getSetting("show_fermenting");
   const storedSoon = await getSetting("show_coming_soon");
+  const clampColumns = (v: string | null, dflt: number) => {
+    const n = parseInt(v ?? "", 10);
+    return Number.isInteger(n) ? Math.min(4, Math.max(1, n)) : dflt;
+  };
+  const onTapCols = clampColumns(await getSetting("columns_on_tap"), 2);
+  const fermCols = clampColumns(await getSetting("columns_fermenting"), 1);
+  const soonCols = clampColumns(await getSetting("columns_coming_soon"), 1);
   const rotateSeconds = (() => {
     const n = parseInt(storedRotateSecs ?? "", 10);
     return Number.isInteger(n) ? Math.min(120, Math.max(5, n)) : 12;
@@ -105,6 +112,9 @@ export default async function AdminPage() {
                 initialShowOnTap={storedOnTap !== "false"}
                 initialShowFermenting={storedFerm !== "false"}
                 initialShowComingSoon={storedSoon !== "false"}
+                initialOnTapColumns={onTapCols}
+                initialFermentingColumns={fermCols}
+                initialComingSoonColumns={soonCols}
               />
               <ThemeSettings
                 initialThemes={customThemes}

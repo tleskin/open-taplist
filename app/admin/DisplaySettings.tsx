@@ -25,6 +25,9 @@ export default function DisplaySettings({
   initialShowOnTap,
   initialShowFermenting,
   initialShowComingSoon,
+  initialOnTapColumns,
+  initialFermentingColumns,
+  initialComingSoonColumns,
 }: {
   initialRotate: boolean;
   initialRotateSeconds: number;
@@ -33,6 +36,9 @@ export default function DisplaySettings({
   initialShowOnTap: boolean;
   initialShowFermenting: boolean;
   initialShowComingSoon: boolean;
+  initialOnTapColumns: number;
+  initialFermentingColumns: number;
+  initialComingSoonColumns: number;
 }) {
   const [rotate, setRotate] = useState(initialRotate);
   const [seconds, setSeconds] = useState(String(initialRotateSeconds));
@@ -43,6 +49,13 @@ export default function DisplaySettings({
   const [showOnTap, setShowOnTap] = useState(initialShowOnTap);
   const [showFermenting, setShowFermenting] = useState(initialShowFermenting);
   const [showComingSoon, setShowComingSoon] = useState(initialShowComingSoon);
+  const [onTapColumns, setOnTapColumns] = useState(String(initialOnTapColumns));
+  const [fermentingColumns, setFermentingColumns] = useState(
+    String(initialFermentingColumns)
+  );
+  const [comingSoonColumns, setComingSoonColumns] = useState(
+    String(initialComingSoonColumns)
+  );
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -51,6 +64,17 @@ export default function DisplaySettings({
     const n = Number(seconds);
     if (!Number.isInteger(n) || n < 5 || n > 120) {
       setError("Rotation interval must be a whole number of seconds, 5–120.");
+      return;
+    }
+    const col = (raw: string) => {
+      const v = Number(raw);
+      return Number.isInteger(v) ? Math.min(4, Math.max(1, v)) : null;
+    };
+    const cOnTap = col(onTapColumns);
+    const cFerm = col(fermentingColumns);
+    const cSoon = col(comingSoonColumns);
+    if (cOnTap === null || cFerm === null || cSoon === null) {
+      setError("Columns must be a whole number, 1–4.");
       return;
     }
     setError(null);
@@ -65,6 +89,11 @@ export default function DisplaySettings({
           showOnTap,
           showFermenting,
           showComingSoon,
+          columns: {
+            onTap: cOnTap,
+            fermenting: cFerm,
+            comingSoon: cSoon,
+          },
         });
         setSaved(true);
       } catch (err) {
@@ -92,9 +121,10 @@ export default function DisplaySettings({
           className="h-5 w-5 shrink-0 cursor-pointer accent-amber-500"
         />
         <span className="text-sm font-semibold text-zinc-200">
-          Auto-rotate pages
+          Auto-rotate sections
           <span className="block text-xs font-normal text-zinc-500">
-            Fade between pages when there&apos;s more than one screenful.
+            Each section turns its own pages when there&apos;s more than
+            fits.
           </span>
         </span>
       </label>
@@ -155,6 +185,38 @@ export default function DisplaySettings({
           </span>
         </span>
       </label>
+
+      <p className="mt-6 text-sm font-semibold text-zinc-300">
+        Columns per section
+      </p>
+      <p className="-mt-0.5 text-xs text-zinc-500">
+        How many columns of pours each TV section shows (1–4).
+      </p>
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        {(
+          [
+            ["onTapColumns", onTapColumns, setOnTapColumns, "On Tap"],
+            ["fermentingColumns", fermentingColumns, setFermentingColumns, "Fermenting"],
+            ["comingSoonColumns", comingSoonColumns, setComingSoonColumns, "Coming Soon"],
+          ] as const
+        ).map(([key, value, setValue, label]) => (
+          <label key={key} className="block">
+            <span className="text-xs font-semibold text-zinc-400">{label}</span>
+            <input
+              type="number"
+              min={1}
+              max={4}
+              step={1}
+              value={value}
+              onChange={(e) => {
+                setValue(e.target.value);
+                setSaved(false);
+              }}
+              className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2.5 text-zinc-100 focus:border-amber-500 focus:outline-none"
+            />
+          </label>
+        ))}
+      </div>
 
       <p className="mt-6 text-sm font-semibold text-zinc-300">
         Visible sections
