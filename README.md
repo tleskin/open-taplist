@@ -10,10 +10,14 @@ manage what's on tap from your phone.
 
 Try it here: **https://open-taplist-demo.vercel.app**
 
-Admin login — username `demo`, password `demo`. Poke around: add a pour,
-restyle the theme, cheer a beer. The demo reseeds itself with sample data
-whenever its database is empty, so don't be surprised if your experiments
-vanish.
+No login needed — it's a public playground. Use the **Try the admin →**
+link in the footer to poke around the dashboard: add a pour, restyle the
+theme, cheer a beer. The demo reseeds itself with sample data whenever its
+database is empty, so don't be surprised if your experiments vanish.
+
+![Tap list on a TV](screenshots/taplist-tv.png)
+![Tap list on a phone](screenshots/taplist-mobile.png)
+![Admin dashboard](screenshots/admin.png)
 
 ## Features
 
@@ -83,7 +87,7 @@ npm run db:seed   # optional: sample pours to start with
 | `NEXT_PUBLIC_BREWERY_NAME` | No     | Brewery name shown in the tap list header (default: "My Home Brewery") |
 | `ADMIN_USERNAME`         | No       | Admin login username (default: `admin`)                  |
 | `ADMIN_PASSWORD`         | No       | Admin login password — set this to protect `/admin` (see below) |
-| `DEMO_MODE`              | No       | Set to `true` on a demo instance: shows a Demo badge, and the Vercel build runs migrations + seeds sample data if the database is empty |
+| `DEMO_MODE`              | No       | Set to `true` on a demo instance: skips admin auth, shows a Demo badge + admin link, and the Vercel build runs migrations + seeds sample data if the database is empty |
 | `POSTGRES_USER`          | No       | Docker Compose only — Postgres user (default: `taplist`) |
 | `POSTGRES_PASSWORD`      | No       | Docker Compose only — Postgres password                  |
 | `POSTGRES_DB`            | No       | Docker Compose only — Postgres database (default: `taplist`) |

@@ -438,7 +438,10 @@ export default function TapListPage() {
   }, [pageCount, isTv, rotate, rotateSeconds]);
 
   return (
-    <div className={t.page} style={themeVars as CSSProperties | undefined}>
+    <div
+      className={`${t.page} flex min-h-screen flex-col`}
+      style={themeVars as CSSProperties | undefined}
+    >
       {!splashGone && (
         <div
           aria-hidden={splashFaded}
@@ -478,7 +481,7 @@ export default function TapListPage() {
         </div>
       </header>
 
-      <main className="relative mx-auto max-w-6xl space-y-12 px-6 py-8 sm:px-10 2xl:max-w-[1720px]">
+      <main className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center space-y-12 px-6 py-8 sm:px-10 2xl:max-w-[1720px]">
         {error && (
           <div className={t.errorBox}>
             Couldn&apos;t reach the tap list. Check the server connection.
@@ -563,9 +566,17 @@ export default function TapListPage() {
         <p>
           © {year} OpenTaplist · Brewed with love 🍻
           {process.env.DEMO_MODE === "true" && (
-            <span className="ml-2 rounded-full border border-amber-400/50 px-2 py-0.5 text-xs font-semibold text-amber-300">
-              Demo
-            </span>
+            <>
+              <span className="ml-2 rounded-full border border-amber-400/50 px-2 py-0.5 text-xs font-semibold text-amber-300">
+                Demo
+              </span>
+              <a
+                href="/admin"
+                className="ml-2 text-xs font-semibold text-amber-300 underline decoration-amber-400/60 underline-offset-4 hover:text-amber-200"
+              >
+                Try the admin →
+              </a>
+            </>
           )}
         </p>
         <p className="mt-1 opacity-70">Refreshes automatically</p>
