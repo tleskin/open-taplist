@@ -21,14 +21,19 @@ export default function DisplaySettings({
   initialRotate,
   initialRotateSeconds,
   initialCheersEnabled,
+  initialShowDescriptions,
 }: {
   initialRotate: boolean;
   initialRotateSeconds: number;
   initialCheersEnabled: boolean;
+  initialShowDescriptions: boolean;
 }) {
   const [rotate, setRotate] = useState(initialRotate);
   const [seconds, setSeconds] = useState(String(initialRotateSeconds));
   const [cheersEnabled, setCheersEnabled] = useState(initialCheersEnabled);
+  const [showDescriptions, setShowDescriptions] = useState(
+    initialShowDescriptions
+  );
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -47,6 +52,7 @@ export default function DisplaySettings({
           displayRotate: rotate,
           displayRotateSeconds: n,
           cheersEnabled,
+          showDescriptions,
         });
         setSaved(true);
       } catch (err) {
@@ -115,6 +121,25 @@ export default function DisplaySettings({
           Cheers 🍻
           <span className="block text-xs font-normal text-zinc-500">
             Let visitors tap to cheers a pour; the count shows on its card.
+          </span>
+        </span>
+      </label>
+
+      <label className="mt-5 flex cursor-pointer items-center gap-3">
+        <input
+          type="checkbox"
+          checked={showDescriptions}
+          onChange={(e) => {
+            setShowDescriptions(e.target.checked);
+            setSaved(false);
+          }}
+          className="h-5 w-5 shrink-0 cursor-pointer accent-amber-500"
+        />
+        <span className="text-sm font-semibold text-zinc-200">
+          Pour descriptions
+          <span className="block text-xs font-normal text-zinc-500">
+            Show the tasting notes under each pour. Turn off for a denser
+            board.
           </span>
         </span>
       </label>

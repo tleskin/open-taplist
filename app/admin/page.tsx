@@ -60,6 +60,7 @@ export default async function AdminPage() {
   const storedRotate = await getSetting("display_rotate");
   const storedRotateSecs = await getSetting("display_rotate_seconds");
   const storedCheers = await getSetting("cheers_enabled");
+  const storedDesc = await getSetting("show_descriptions");
   const rotateSeconds = (() => {
     const n = parseInt(storedRotateSecs ?? "", 10);
     return Number.isInteger(n) ? Math.min(120, Math.max(5, n)) : 12;
@@ -97,6 +98,7 @@ export default async function AdminPage() {
                 initialRotate={storedRotate !== "false"}
                 initialRotateSeconds={rotateSeconds}
                 initialCheersEnabled={storedCheers !== "false"}
+                initialShowDescriptions={storedDesc !== "false"}
               />
               <ThemeSettings
                 initialThemes={customThemes}

@@ -193,11 +193,13 @@ function OnTapCard({
   t,
   cheersEnabled,
   isTv,
+  showDescriptions,
 }: {
   beer: ApiBeer;
   t: ThemeStyles;
   cheersEnabled: boolean;
   isTv: boolean;
+  showDescriptions: boolean;
 }) {
   if (t.compact) {
     // Dense taplist.io-style row: tap number, name + stats on one line.
@@ -226,7 +228,9 @@ function OnTapCard({
               <CheersButton beerId={beer.id} count={beer.cheers ?? 0} />
             )}
           </div>
-          {beer.description && <p className={t.bodyText}>{beer.description}</p>}
+          {showDescriptions && beer.description && (
+            <p className={t.bodyText}>{beer.description}</p>
+          )}
         </div>
       </li>
     );
@@ -258,7 +262,9 @@ function OnTapCard({
         {cheersEnabled && (
           <CheersButton beerId={beer.id} count={beer.cheers ?? 0} />
         )}
-        {beer.description && <p className={t.bodyText}>{beer.description}</p>}
+        {showDescriptions && beer.description && (
+          <p className={t.bodyText}>{beer.description}</p>
+        )}
       </div>
     </li>
   );
@@ -270,12 +276,14 @@ function OnTapSection({
   cheersEnabled,
   isMd,
   isTv,
+  showDescriptions,
 }: {
   beers: ApiBeer[];
   t: ThemeStyles;
   cheersEnabled: boolean;
   isMd: boolean;
   isTv: boolean;
+  showDescriptions: boolean;
 }) {
   const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 4);
   return (
@@ -299,6 +307,7 @@ function OnTapSection({
             t={t}
             cheersEnabled={cheersEnabled}
             isTv={isTv}
+            showDescriptions={showDescriptions}
           />
         ))}
       </ul>
@@ -311,11 +320,13 @@ function FermentingSection({
   t,
   isMd,
   isTv,
+  showDescriptions,
 }: {
   beers: ApiBeer[];
   t: ThemeStyles;
   isMd: boolean;
   isTv: boolean;
+  showDescriptions: boolean;
 }) {
   const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 3);
   return (
@@ -351,7 +362,7 @@ function FermentingSection({
               </h3>
               <p className={t.styleText}>{beer.style}</p>
               <BeerStats beer={beer} t={t} />
-              {beer.description && (
+              {showDescriptions && beer.description && (
                 <p className={t.bodyText}>{beer.description}</p>
               )}
             </div>
@@ -367,11 +378,13 @@ function ComingSoonSection({
   t,
   isMd,
   isTv,
+  showDescriptions,
 }: {
   beers: ApiBeer[];
   t: ThemeStyles;
   isMd: boolean;
   isTv: boolean;
+  showDescriptions: boolean;
 }) {
   const cols = t.compact ? 1 : gridCols(beers.length, isMd, isTv, 3);
   return (
@@ -393,7 +406,7 @@ function ComingSoonSection({
               <h3 className={`text-2xl font-bold leading-tight ${t.nameText}`}>{beer.name}</h3>
               <p className={t.styleText}>{beer.style}</p>
               <BeerStats beer={beer} t={t} />
-              {beer.description && (
+              {showDescriptions && beer.description && (
                 <p className={t.bodyText}>{beer.description}</p>
               )}
             </div>
@@ -413,6 +426,7 @@ export default function TapListPage() {
   const [error, setError] = useState(false);
   // Computed after mount: reading the clock during prerender is blocked.
   const [year, setYear] = useState(2026);
+  const [showDescriptions, setShowDescriptions] = useState(true);
   useEffect(() => {
     setYear(new Date().getFullYear());
   }, []);
@@ -441,6 +455,9 @@ export default function TapListPage() {
         if (Number.isInteger(rs)) {
           setRotateSeconds(Math.min(120, Math.max(5, rs as number)));
         }
+      }
+      if (typeof settings.showDescriptions === "boolean") {
+        setShowDescriptions(settings.showDescriptions);
       }
       if (typeof settings.cheersEnabled === "boolean") {
         setCheersEnabled(settings.cheersEnabled);
@@ -603,14 +620,15 @@ export default function TapListPage() {
                     cheersEnabled={cheersEnabled}
                     isMd={isMd}
                     isTv={isTv}
+                    showDescriptions={showDescriptions}
                   />
                 ) : (
                   <div className="flex min-h-0 flex-1 flex-col justify-evenly gap-8">
                     {fermenting.length > 0 && (
-                      <FermentingSection beers={fermenting} t={t} isMd={isMd} isTv={isTv} />
+                      <FermentingSection beers={fermenting} t={t} isMd={isMd} isTv={isTv} showDescriptions={showDescriptions} />
                     )}
                     {comingSoon.length > 0 && (
-                      <ComingSoonSection beers={comingSoon} t={t} isMd={isMd} isTv={isTv} />
+                      <ComingSoonSection beers={comingSoon} t={t} isMd={isMd} isTv={isTv} showDescriptions={showDescriptions} />
                     )}
                   </div>
                 )}
@@ -642,13 +660,14 @@ export default function TapListPage() {
                   cheersEnabled={cheersEnabled}
                   isMd={isMd}
                   isTv={isTv}
+                  showDescriptions={showDescriptions}
                 />
               )}
               {fermenting.length > 0 && (
-                <FermentingSection beers={fermenting} t={t} isMd={isMd} isTv={isTv} />
+                <FermentingSection beers={fermenting} t={t} isMd={isMd} isTv={isTv} showDescriptions={showDescriptions} />
               )}
               {comingSoon.length > 0 && (
-                <ComingSoonSection beers={comingSoon} t={t} isMd={isMd} isTv={isTv} />
+                <ComingSoonSection beers={comingSoon} t={t} isMd={isMd} isTv={isTv} showDescriptions={showDescriptions} />
               )}
             </div>
           )

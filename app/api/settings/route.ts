@@ -52,6 +52,7 @@ export async function GET() {
     storedRotate,
     storedRotateSecs,
     storedCheers,
+    storedDesc,
   ] = await Promise.all([
     getSetting("theme"),
     getSetting("brewery_name"),
@@ -60,6 +61,7 @@ export async function GET() {
     getSetting("display_rotate"),
     getSetting("display_rotate_seconds"),
     getSetting("cheers_enabled"),
+    getSetting("show_descriptions"),
   ]);
   const theme: ThemeId = isThemeId(storedTheme) ? storedTheme : DEFAULT_THEME;
   return Response.json({
@@ -72,6 +74,7 @@ export async function GET() {
       rotateSeconds: parseRotateSeconds(storedRotateSecs),
     },
     cheersEnabled: storedCheers !== "false",
+    showDescriptions: storedDesc !== "false",
   });
 }
 
@@ -186,6 +189,17 @@ export async function PUT(request: Request) {
     }
     await setSetting("cheers_enabled", b.cheersEnabled ? "true" : "false");
     out.cheersEnabled = b.cheersEnabled;
+  }
+
+  if ("showDescriptions" in b) {
+    if (typeof b.showDescriptions !== "boolean") {
+      return Response.json(
+        { error: "showDescriptions must be a boolean." },
+        { status: 400 }
+      );
+    }
+    await setSetting("show_descriptions", b.showDescriptions ? "true" : "false");
+    out.showDescriptions = b.showDescriptions;
   }
 
   return Response.json(out);
