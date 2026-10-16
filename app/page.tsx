@@ -20,6 +20,17 @@ type ApiBeer = Omit<Beer, "createdAt" | "updatedAt"> & {
 const DEFAULT_BREWERY_NAME =
   process.env.NEXT_PUBLIC_BREWERY_NAME ?? "My Home Brewery";
 const POLL_INTERVAL_MS = 30_000;
+// TV paging: On Tap is chunked into full-screen pages; Fermenting + Coming
+// Soon share a final page. Pages auto-rotate with a fade when there is more
+// than one.
+const ROTATE_MS = 12_000;
+const ON_TAP_PAGE_SIZE = 4;
+
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
 
 function ClockIcon({ className }: { className?: string }) {
   return (
@@ -91,6 +102,33 @@ function BeerStats({ beer, t }: { beer: ApiBeer; t: ThemeStyles }) {  return (
   );
 }
 
+function OnTapCard({ beer, t }: { beer: ApiBeer; t: ThemeStyles }) {
+  return (
+    <li className={t.card}>
+      {t.cardShine && <div aria-hidden className={t.cardShine} />}
+      {beer.labelImage ? (
+        <div className="relative shrink-0 self-start">
+          <BeerVisual beer={beer} />
+          <div className={`${t.tapBadge} absolute -left-3 -top-3 scale-75`}>
+            {beer.tapNumber}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className={t.tapBadge}>{beer.tapNumber}</div>
+          <BeerVisual beer={beer} />
+        </>
+      )}
+      <div className="relative min-w-0">
+        <h3 className="text-2xl font-bold leading-tight">{beer.name}</h3>
+        <p className={t.styleText}>{beer.style}</p>
+        <BeerStats beer={beer} t={t} />
+        {beer.description && <p className={t.bodyText}>{beer.description}</p>}
+      </div>
+    </li>
+  );
+}
+
 export default function TapListPage() {
   const [beers, setBeers] = useState<ApiBeer[] | null>(null);
   const [themeRef, setThemeRef] = useState("midnight");
@@ -143,6 +181,23 @@ export default function TapListPage() {
   const fermenting = byStatus("fermenting");
   const comingSoon = byStatus("coming_soon");
   const hasAny = onTap.length + fermenting.length + comingSoon.length > 0;
+
+  const [pageIdx, setPageIdx] = useState(0);
+  const onTapPages = chunk(onTap, ON_TAP_PAGE_SIZE);
+  const pageCount =
+    onTapPages.length + (fermenting.length + comingSoon.length > 0 ? 1 : 0);
+
+  useEffect(() => {
+    setPageIdx((i) => Math.min(i, Math.max(0, pageCount - 1)));
+  }, [pageCount]);
+
+  useEffect(() => {
+    if (pageCount <= 1) return;
+    const id = setInterval(() => {
+      setPageIdx((i) => (i + 1) % pageCount);
+    }, ROTATE_MS);
+    return () => clearInterval(id);
+  }, [pageCount]);
 
   return (
     <div className={t.page} style={themeVars as CSSProperties | undefined}>
@@ -197,113 +252,109 @@ export default function TapListPage() {
           </div>
         )}
 
-        {onTap.length > 0 && (
-          <section>
-            <SectionHeader
-              t={t}
-              title="On Tap"
-              icon={<BeerGlass glass="pint" srm={6} className="h-7 w-auto" />}
-            />
-            <ul className="grid gap-5 md:grid-cols-2">
-              {onTap.map((beer) => (
-                <li key={beer.id} className={t.card}>
-                  {t.cardShine && (
-                    <div aria-hidden className={t.cardShine} />
-                  )}
-                  {beer.labelImage ? (
-                    <div className="relative shrink-0 self-start">
-                      <BeerVisual beer={beer} />
-                      <div
-                        className={`${t.tapBadge} absolute -left-3 -top-3 scale-75`}
-                      >
-                        {beer.tapNumber}
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className={t.tapBadge}>{beer.tapNumber}</div>
-                      <BeerVisual beer={beer} />
-                    </>
-                  )}
-                  <div className="relative min-w-0">
-                    <h3 className="text-2xl font-bold leading-tight">
-                      {beer.name}
-                    </h3>
-                    <p className={t.styleText}>{beer.style}</p>
-                    <BeerStats beer={beer} t={t} />
-                    {beer.description && (
-                      <p className={t.bodyText}>{beer.description}</p>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {fermenting.length > 0 && (
-          <section>
-            <SectionHeader
-              t={t}
-              title="Fermenting"
-              icon={<CarboyIcon className="h-7 w-auto" />}
-            />
-            <ul className="grid gap-5 md:grid-cols-2">
-              {fermenting.map((beer) => (
-                <li key={beer.id} className={t.card}>
-                  {t.cardShine && (
-                    <div aria-hidden className={t.cardShine} />
-                  )}
-                  <CarboyIcon srm={beer.srm} className="h-24 w-auto shrink-0 opacity-90" />
-                  <div className="relative min-w-0">
-                    <h3 className="text-2xl font-bold leading-tight">
-                      {beer.name}{" "}
-                      <span
-                        title={`~${beer.srm ?? "?"} SRM`}
-                        className="inline-block h-4 w-4 rounded-full border border-white/30 align-middle"
-                        style={{ backgroundColor: srmToHex(beer.srm) }}
+        {beers !== null && !error && hasAny && (
+          <>
+            <div key={pageIdx} className="animate-pagefade">
+              {pageIdx < onTapPages.length ? (
+                <section>
+                  <SectionHeader
+                    t={t}
+                    title="On Tap"
+                    icon={<BeerGlass glass="pint" srm={6} className="h-7 w-auto" />}
+                  />
+                  <ul className="grid gap-5 md:grid-cols-2">
+                    {onTapPages[pageIdx].map((beer) => (
+                      <OnTapCard key={beer.id} beer={beer} t={t} />
+                    ))}
+                  </ul>
+                </section>
+              ) : (
+                <div className="space-y-12">
+                  {fermenting.length > 0 && (
+                    <section>
+                      <SectionHeader
+                        t={t}
+                        title="Fermenting"
+                        icon={<CarboyIcon className="h-7 w-auto" />}
                       />
-                    </h3>
-                    <p className={t.styleText}>{beer.style}</p>
-                    <BeerStats beer={beer} t={t} />
-                    {beer.description && (
-                      <p className={t.bodyText}>{beer.description}</p>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {comingSoon.length > 0 && (
-          <section>
-            <SectionHeader
-              t={t}
-              title="Coming Soon"
-              icon={<ClockIcon className="h-6 w-6" />}
-            />
-            <ul className="grid gap-5 md:grid-cols-2">
-              {comingSoon.map((beer) => (
-                <li key={beer.id} className={t.mutedCard}>
-                  {t.cardShine && (
-                    <div aria-hidden className={t.cardShine} />
+                      <ul className="grid gap-5 md:grid-cols-2">
+                        {fermenting.map((beer) => (
+                          <li key={beer.id} className={t.card}>
+                            {t.cardShine && (
+                              <div aria-hidden className={t.cardShine} />
+                            )}
+                            <CarboyIcon srm={beer.srm} className="h-24 w-auto shrink-0 opacity-90" />
+                            <div className="relative min-w-0">
+                              <h3 className="text-2xl font-bold leading-tight">
+                                {beer.name}{" "}
+                                <span
+                                  title={`~${beer.srm ?? "?"} SRM`}
+                                  className="inline-block h-4 w-4 rounded-full border border-white/30 align-middle"
+                                  style={{ backgroundColor: srmToHex(beer.srm) }}
+                                />
+                              </h3>
+                              <p className={t.styleText}>{beer.style}</p>
+                              <BeerStats beer={beer} t={t} />
+                              {beer.description && (
+                                <p className={t.bodyText}>{beer.description}</p>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
                   )}
-                  <BeerVisual beer={beer} ghost />
-                  <div className="relative min-w-0">
-                    <h3 className="text-2xl font-bold leading-tight">
-                      {beer.name}
-                    </h3>
-                    <p className={t.styleText}>{beer.style}</p>
-                    <BeerStats beer={beer} t={t} />
-                    {beer.description && (
-                      <p className={t.bodyText}>{beer.description}</p>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
+
+                  {comingSoon.length > 0 && (
+                    <section>
+                      <SectionHeader
+                        t={t}
+                        title="Coming Soon"
+                        icon={<ClockIcon className="h-6 w-6" />}
+                      />
+                      <ul className="grid gap-5 md:grid-cols-2">
+                        {comingSoon.map((beer) => (
+                          <li key={beer.id} className={t.mutedCard}>
+                            {t.cardShine && (
+                              <div aria-hidden className={t.cardShine} />
+                            )}
+                            <BeerVisual beer={beer} ghost />
+                            <div className="relative min-w-0">
+                              <h3 className="text-2xl font-bold leading-tight">
+                                {beer.name}
+                              </h3>
+                              <p className={t.styleText}>{beer.style}</p>
+                              <BeerStats beer={beer} t={t} />
+                              {beer.description && (
+                                <p className={t.bodyText}>{beer.description}</p>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  )}
+                </div>
+              )}
+            </div>
+            {pageCount > 1 && (
+              <div className="flex justify-center gap-2">
+                {Array.from({ length: pageCount }, (_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setPageIdx(i)}
+                    aria-label={`Show page ${i + 1}`}
+                    className={`h-2 w-2 rounded-full transition-colors ${
+                      i === pageIdx
+                        ? "bg-amber-400"
+                        : "bg-current opacity-25 hover:opacity-60"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
 

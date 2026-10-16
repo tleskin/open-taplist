@@ -108,3 +108,23 @@ body {
 .ctp-empty-title {
   color: var(--ctp-text);
 }
+
+/* TV page rotation: soft fade/slide when the tap list turns the page. */
+@keyframes pagefade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-pagefade {
+  animation: pagefade 0.55s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-pagefade {
+    animation: none;
+  }
+}
