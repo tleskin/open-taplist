@@ -27,8 +27,8 @@ const POLL_INTERVAL_MS = 30_000;
 // big On Tap section gets its own tall band while small sections pair up
 // into a shared row (e.g. 8 on tap -> top two-thirds, 1 fermenting +
 // 1 coming soon share the bottom third, left-aligned).
-const TV_TILE_W = 380;
-const TV_TILE_H = 270;
+const TV_TILE_W = 360;
+const TV_TILE_H = 200;
 const TV_GAP = 20; // gap-5
 const TV_COMPACT_ROW_H = 68;
 
@@ -286,7 +286,7 @@ function TvSection({
  * pour counts. Sections wanting 2+ tile rows get their own full-width
  * band; small sections pair up into a shared row.
  */
-function TvBoard({
+export function TvBoard({
   onTap,
   fermenting,
   comingSoon,
