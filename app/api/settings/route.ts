@@ -53,6 +53,9 @@ export async function GET() {
     storedRotateSecs,
     storedCheers,
     storedDesc,
+    storedOnTap,
+    storedFerm,
+    storedSoon,
   ] = await Promise.all([
     getSetting("theme"),
     getSetting("brewery_name"),
@@ -62,6 +65,9 @@ export async function GET() {
     getSetting("display_rotate_seconds"),
     getSetting("cheers_enabled"),
     getSetting("show_descriptions"),
+    getSetting("show_on_tap"),
+    getSetting("show_fermenting"),
+    getSetting("show_coming_soon"),
   ]);
   const theme: ThemeId = isThemeId(storedTheme) ? storedTheme : DEFAULT_THEME;
   return Response.json({
@@ -75,6 +81,9 @@ export async function GET() {
     },
     cheersEnabled: storedCheers !== "false",
     showDescriptions: storedDesc !== "false",
+    showOnTap: storedOnTap !== "false",
+    showFermenting: storedFerm !== "false",
+    showComingSoon: storedSoon !== "false",
   });
 }
 
@@ -200,6 +209,23 @@ export async function PUT(request: Request) {
     }
     await setSetting("show_descriptions", b.showDescriptions ? "true" : "false");
     out.showDescriptions = b.showDescriptions;
+  }
+
+  for (const [bodyKey, storeKey] of [
+    ["showOnTap", "show_on_tap"],
+    ["showFermenting", "show_fermenting"],
+    ["showComingSoon", "show_coming_soon"],
+  ] as const) {
+    if (bodyKey in b) {
+      if (typeof b[bodyKey] !== "boolean") {
+        return Response.json(
+          { error: `${bodyKey} must be a boolean.` },
+          { status: 400 }
+        );
+      }
+      await setSetting(storeKey, b[bodyKey] ? "true" : "false");
+      out[bodyKey] = b[bodyKey];
+    }
   }
 
   return Response.json(out);

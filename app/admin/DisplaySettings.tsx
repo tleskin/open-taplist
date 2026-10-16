@@ -22,11 +22,17 @@ export default function DisplaySettings({
   initialRotateSeconds,
   initialCheersEnabled,
   initialShowDescriptions,
+  initialShowOnTap,
+  initialShowFermenting,
+  initialShowComingSoon,
 }: {
   initialRotate: boolean;
   initialRotateSeconds: number;
   initialCheersEnabled: boolean;
   initialShowDescriptions: boolean;
+  initialShowOnTap: boolean;
+  initialShowFermenting: boolean;
+  initialShowComingSoon: boolean;
 }) {
   const [rotate, setRotate] = useState(initialRotate);
   const [seconds, setSeconds] = useState(String(initialRotateSeconds));
@@ -34,6 +40,9 @@ export default function DisplaySettings({
   const [showDescriptions, setShowDescriptions] = useState(
     initialShowDescriptions
   );
+  const [showOnTap, setShowOnTap] = useState(initialShowOnTap);
+  const [showFermenting, setShowFermenting] = useState(initialShowFermenting);
+  const [showComingSoon, setShowComingSoon] = useState(initialShowComingSoon);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -53,6 +62,9 @@ export default function DisplaySettings({
           displayRotateSeconds: n,
           cheersEnabled,
           showDescriptions,
+          showOnTap,
+          showFermenting,
+          showComingSoon,
         });
         setSaved(true);
       } catch (err) {
@@ -143,6 +155,38 @@ export default function DisplaySettings({
           </span>
         </span>
       </label>
+
+      <p className="mt-6 text-sm font-semibold text-zinc-300">
+        Visible sections
+      </p>
+      {(
+        [
+          ["showOnTap", showOnTap, setShowOnTap, "On Tap", "The main pour list."],
+          ["showFermenting", showFermenting, setShowFermenting, "Fermenting", "What's in the fermenters."],
+          ["showComingSoon", showComingSoon, setShowComingSoon, "Coming Soon", "What's up next."],
+        ] as const
+      ).map(([key, value, setValue, label, hint]) => (
+        <label
+          key={key}
+          className="mt-3 flex cursor-pointer items-center gap-3"
+        >
+          <input
+            type="checkbox"
+            checked={value}
+            onChange={(e) => {
+              setValue(e.target.checked);
+              setSaved(false);
+            }}
+            className="h-5 w-5 shrink-0 cursor-pointer accent-amber-500"
+          />
+          <span className="text-sm font-semibold text-zinc-200">
+            {label}
+            <span className="block text-xs font-normal text-zinc-500">
+              {hint}
+            </span>
+          </span>
+        </label>
+      ))}
 
       <button
         type="button"

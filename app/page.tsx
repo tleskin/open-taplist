@@ -427,6 +427,9 @@ export default function TapListPage() {
   // Computed after mount: reading the clock during prerender is blocked.
   const [year, setYear] = useState(2026);
   const [showDescriptions, setShowDescriptions] = useState(true);
+  const [showOnTap, setShowOnTap] = useState(true);
+  const [showFermenting, setShowFermenting] = useState(true);
+  const [showComingSoon, setShowComingSoon] = useState(true);
   useEffect(() => {
     setYear(new Date().getFullYear());
   }, []);
@@ -459,6 +462,15 @@ export default function TapListPage() {
       if (typeof settings.showDescriptions === "boolean") {
         setShowDescriptions(settings.showDescriptions);
       }
+      if (typeof settings.showOnTap === "boolean") {
+        setShowOnTap(settings.showOnTap);
+      }
+      if (typeof settings.showFermenting === "boolean") {
+        setShowFermenting(settings.showFermenting);
+      }
+      if (typeof settings.showComingSoon === "boolean") {
+        setShowComingSoon(settings.showComingSoon);
+      }
       if (typeof settings.cheersEnabled === "boolean") {
         setCheersEnabled(settings.cheersEnabled);
       }
@@ -481,9 +493,9 @@ export default function TapListPage() {
 
   const byStatus = (status: BeerStatus) =>
     (beers ?? []).filter((b) => b.status === status);
-  const onTap = byStatus("on_tap");
-  const fermenting = byStatus("fermenting");
-  const comingSoon = byStatus("coming_soon");
+  const onTap = showOnTap ? byStatus("on_tap") : [];
+  const fermenting = showFermenting ? byStatus("fermenting") : [];
+  const comingSoon = showComingSoon ? byStatus("coming_soon") : [];
   const hasAny = onTap.length + fermenting.length + comingSoon.length > 0;
 
   const [pageIdx, setPageIdx] = useState(0);

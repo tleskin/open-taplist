@@ -61,6 +61,9 @@ export default async function AdminPage() {
   const storedRotateSecs = await getSetting("display_rotate_seconds");
   const storedCheers = await getSetting("cheers_enabled");
   const storedDesc = await getSetting("show_descriptions");
+  const storedOnTap = await getSetting("show_on_tap");
+  const storedFerm = await getSetting("show_fermenting");
+  const storedSoon = await getSetting("show_coming_soon");
   const rotateSeconds = (() => {
     const n = parseInt(storedRotateSecs ?? "", 10);
     return Number.isInteger(n) ? Math.min(120, Math.max(5, n)) : 12;
@@ -99,6 +102,9 @@ export default async function AdminPage() {
                 initialRotateSeconds={rotateSeconds}
                 initialCheersEnabled={storedCheers !== "false"}
                 initialShowDescriptions={storedDesc !== "false"}
+                initialShowOnTap={storedOnTap !== "false"}
+                initialShowFermenting={storedFerm !== "false"}
+                initialShowComingSoon={storedSoon !== "false"}
               />
               <ThemeSettings
                 initialThemes={customThemes}
