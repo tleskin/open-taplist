@@ -640,7 +640,7 @@ function CheersButton({
   );
 }
 
-function OnTapCard({
+export function OnTapCard({
   beer,
   t,
   cheersEnabled,
@@ -690,21 +690,12 @@ function OnTapCard({
   return (
     <li className={`${t.card} ${isTv ? "items-center" : ""} 2xl:gap-4 2xl:p-5`}>
       {t.cardShine && <div aria-hidden className={t.cardShine} />}
-      {beer.labelImage ? (
-        <div className="relative shrink-0 self-start">
-          <BeerVisual beer={beer} />
-          <div className={`${t.tapBadge} absolute -left-3 -top-3 scale-75`}>
-            {beer.tapNumber}
-          </div>
+      <div className="relative shrink-0 self-start">
+        <BeerVisual beer={beer} />
+        <div className={`${t.tapBadge} absolute -left-3 -top-3 scale-75`}>
+          {beer.tapNumber}
         </div>
-      ) : (
-        <>
-          <div className={`${t.tapBadge} 2xl:h-12 2xl:w-12 2xl:text-2xl`}>
-            {beer.tapNumber}
-          </div>
-          <BeerVisual beer={beer} />
-        </>
-      )}
+      </div>
       <div className="relative min-w-0">
         <h3 className={`text-2xl font-bold leading-tight 2xl:text-xl ${t.nameText}`}>
           {beer.name}
