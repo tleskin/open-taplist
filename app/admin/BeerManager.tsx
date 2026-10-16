@@ -462,7 +462,7 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
                   <img
                     src={form.labelImage}
                     alt="Beer label preview"
-                    className="h-20 w-20 shrink-0 rounded-xl object-cover"
+                    className="h-20 w-20 shrink-0 rounded-xl object-contain"
                   />
                 ) : (
                   <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-dashed border-zinc-700 text-xs text-zinc-500">
@@ -618,7 +618,7 @@ export default function BeerManager({ initialBeers }: { initialBeers: Beer[] }) 
                       <img
                         src={beer.labelImage}
                         alt=""
-                        className="h-8 w-8 shrink-0 rounded-lg object-cover"
+                        className="h-8 w-8 shrink-0 rounded-lg object-contain"
                       />
                     )}
                     {beer.name}

@@ -66,7 +66,7 @@ function BeerVisual({ beer, ghost }: { beer: ApiBeer; ghost?: boolean }) {
       <img
         src={beer.labelImage}
         alt={`${beer.name} label`}
-        className={`h-24 w-24 shrink-0 rounded-2xl object-cover ${ghostCls}`}
+        className={`h-24 w-24 shrink-0 rounded-2xl object-contain ${ghostCls}`}
       />
     );
   }
