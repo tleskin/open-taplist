@@ -28,17 +28,15 @@ const POLL_INTERVAL_MS = 30_000;
  * pours independently with a fade.
  */
 export type TvConfig = {
-  /** Inner grid columns for the section's pour list (admin setting, 1-4). */
+  /** Grid columns for the section's pour band (admin setting, 1-4). */
   columns: number;
-  /** Width of the section column relative to its siblings. */
-  flexClass: string;
   rotate: boolean;
   rotateSeconds: number;
 };
 
-/** Rows visible per section column view (doubled for compact themes). */
+/** Card rows visible per section band (compact themes stack more). */
 function tvRows(t: ThemeStyles) {
-  return t.compact ? 8 : 4;
+  return t.compact ? 4 : 1;
 }
 
 function useTvPager(
@@ -370,7 +368,7 @@ function OnTapSection({
     const pageBeers = pages[pageIdx] ?? [];
     const cols = gridCols(pageBeers.length, true, true, tv.columns);
     return (
-      <section className={`flex min-h-0 flex-col ${tv.flexClass}`}>
+      <section className="flex min-h-0 flex-1 flex-col">
         <SectionHeader
           t={t}
           title="On Tap"
@@ -467,7 +465,7 @@ function FermentingSection({
       ? 1
       : gridCols(beers.length, isMd, isTv, 3);
   return (
-    <section className={tv ? `flex min-h-0 flex-col ${tv.flexClass}` : undefined}>
+    <section className={tv ? "flex min-h-0 flex-1 flex-col" : undefined}>
       <SectionHeader
         t={t}
         title="Fermenting"
@@ -555,7 +553,7 @@ function ComingSoonSection({
       ? 1
       : gridCols(beers.length, isMd, isTv, 3);
   return (
-    <section className={tv ? `flex min-h-0 flex-col ${tv.flexClass}` : undefined}>
+    <section className={tv ? "flex min-h-0 flex-1 flex-col" : undefined}>
       <SectionHeader
         t={t}
         title="Coming Soon"
@@ -648,9 +646,9 @@ export default function TapListPage() {
           Number.isInteger(n)
             ? Math.min(4, Math.max(1, n as number))
             : dflt;
-        setOnTapColumns(clamp(c.onTap, 2));
-        setFermentingColumns(clamp(c.fermenting, 1));
-        setComingSoonColumns(clamp(c.comingSoon, 1));
+        setOnTapColumns(clamp(c.onTap, 4));
+        setFermentingColumns(clamp(c.fermenting, 2));
+        setComingSoonColumns(clamp(c.comingSoon, 2));
       }
       if (typeof settings.showDescriptions === "boolean") {
         setShowDescriptions(settings.showDescriptions);
@@ -694,9 +692,9 @@ export default function TapListPage() {
   const [rotate, setRotate] = useState(true);
   const [rotateSeconds, setRotateSeconds] = useState(12);
   const [cheersEnabled, setCheersEnabled] = useState(true);
-  const [onTapColumns, setOnTapColumns] = useState(2);
-  const [fermentingColumns, setFermentingColumns] = useState(1);
-  const [comingSoonColumns, setComingSoonColumns] = useState(1);
+  const [onTapColumns, setOnTapColumns] = useState(4);
+  const [fermentingColumns, setFermentingColumns] = useState(2);
+  const [comingSoonColumns, setComingSoonColumns] = useState(2);
   // Paging/rotation is a TV affair; smaller screens show the whole list.
   const [isTv, setIsTv] = useState(false);
   const [isMd, setIsMd] = useState(false);
@@ -799,7 +797,7 @@ export default function TapListPage() {
 
         {beers !== null && !error && hasAny && (
           isTv ? (
-            <div className="flex min-h-0 flex-1 gap-6 2xl:gap-8">
+            <div className="flex min-h-0 flex-1 flex-col gap-6 2xl:gap-8">
               {onTap.length > 0 && (
                 <OnTapSection
                   beers={onTap}
@@ -808,12 +806,7 @@ export default function TapListPage() {
                   isMd={isMd}
                   isTv={isTv}
                   showDescriptions={showDescriptions}
-                  tv={{
-                    columns: onTapColumns,
-                    flexClass: "flex-[1.5]",
-                    rotate,
-                    rotateSeconds,
-                  }}
+                  tv={{ columns: onTapColumns, rotate, rotateSeconds }}
                 />
               )}
               {fermenting.length > 0 && (
@@ -823,12 +816,7 @@ export default function TapListPage() {
                   isMd={isMd}
                   isTv={isTv}
                   showDescriptions={showDescriptions}
-                  tv={{
-                    columns: fermentingColumns,
-                    flexClass: "flex-1",
-                    rotate,
-                    rotateSeconds,
-                  }}
+                  tv={{ columns: fermentingColumns, rotate, rotateSeconds }}
                 />
               )}
               {comingSoon.length > 0 && (
@@ -838,12 +826,7 @@ export default function TapListPage() {
                   isMd={isMd}
                   isTv={isTv}
                   showDescriptions={showDescriptions}
-                  tv={{
-                    columns: comingSoonColumns,
-                    flexClass: "flex-1",
-                    rotate,
-                    rotateSeconds,
-                  }}
+                  tv={{ columns: comingSoonColumns, rotate, rotateSeconds }}
                 />
               )}
             </div>

@@ -68,9 +68,9 @@ export default async function AdminPage() {
     const n = parseInt(v ?? "", 10);
     return Number.isInteger(n) ? Math.min(4, Math.max(1, n)) : dflt;
   };
-  const onTapCols = clampColumns(await getSetting("columns_on_tap"), 2);
-  const fermCols = clampColumns(await getSetting("columns_fermenting"), 1);
-  const soonCols = clampColumns(await getSetting("columns_coming_soon"), 1);
+  const onTapCols = clampColumns(await getSetting("columns_on_tap"), 4);
+  const fermCols = clampColumns(await getSetting("columns_fermenting"), 2);
+  const soonCols = clampColumns(await getSetting("columns_coming_soon"), 2);
   const rotateSeconds = (() => {
     const n = parseInt(storedRotateSecs ?? "", 10);
     return Number.isInteger(n) ? Math.min(120, Math.max(5, n)) : 12;

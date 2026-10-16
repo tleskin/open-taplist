@@ -96,9 +96,9 @@ export async function GET() {
     showFermenting: storedFerm !== "false",
     showComingSoon: storedSoon !== "false",
     columns: {
-      onTap: clampColumns(storedColOnTap, 2),
-      fermenting: clampColumns(storedColFerm, 1),
-      comingSoon: clampColumns(storedColSoon, 1),
+      onTap: clampColumns(storedColOnTap, 4),
+      fermenting: clampColumns(storedColFerm, 2),
+      comingSoon: clampColumns(storedColSoon, 2),
     },
   });
 }
