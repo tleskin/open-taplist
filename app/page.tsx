@@ -877,14 +877,40 @@ export default function TapListPage() {
     setYear(new Date().getFullYear());
   }, []);
 
+  // ETags for conditional polling: the server answers 304 when nothing
+  // changed, so the 30s poll transfers ~200 bytes instead of ~2.6MB
+  // (Neon free tier = 5GB transfer/month).
+  const beersEtag = useRef<string | null>(null);
+  const settingsEtag = useRef<string | null>(null);
+
   const load = useCallback(async () => {
     try {
       const [beersRes, settingsRes] = await Promise.all([
-        fetch("/api/beers", { cache: "no-store" }),
-        fetch("/api/settings", { cache: "no-store" }),
+        fetch("/api/beers", {
+          cache: "no-store",
+          headers: beersEtag.current
+            ? { "If-None-Match": beersEtag.current }
+            : undefined,
+        }),
+        fetch("/api/settings", {
+          cache: "no-store",
+          headers: settingsEtag.current
+            ? { "If-None-Match": settingsEtag.current }
+            : undefined,
+        }),
       ]);
       if (!beersRes.ok || !settingsRes.ok) throw new Error("bad response");
-      setBeers(await beersRes.json());
+      if (beersRes.status !== 304) {
+        const etag = beersRes.headers.get("ETag");
+        if (etag) beersEtag.current = etag;
+        setBeers(await beersRes.json());
+      }
+      if (settingsRes.status === 304) {
+        setError(false);
+        return;
+      }
+      const etag = settingsRes.headers.get("ETag");
+      if (etag) settingsEtag.current = etag;
       const settings = await settingsRes.json();
       if (typeof settings.theme === "string") setThemeRef(settings.theme);
       if (Array.isArray(settings.customThemes)) {

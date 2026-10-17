@@ -1,4 +1,7 @@
 import { connection } from "next/server";
+import { sql } from "drizzle-orm";
+import { getDb } from "@/db";
+import { settings } from "@/db/schema";
 import {
   isCustomThemeRef,
   isThemeId,
@@ -42,8 +45,25 @@ function parseCustomThemes(raw: string | null): CustomThemeParams[] {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   await connection(); // skip prerendering: reads the live database
+
+  // Cheap version stamp for conditional requests. md5() runs inside
+  // Postgres so the (possibly multi-MB) values never cross the wire here.
+  // The TV polls every 30s; a 304 avoids re-downloading the ~2.4MB
+  // brewery logo when nothing changed (Neon free tier = 5GB/month).
+  const db = getDb();
+  const fingerprints = await db
+    .select({ key: settings.key, hash: sql<string>`md5(${settings.value})` })
+    .from(settings);
+  const etag = `"settings-${fingerprints
+    .map((r) => `${r.key}:${r.hash}`)
+    .sort()
+    .join(",")}"`;
+  if (request.headers.get("if-none-match") === etag) {
+    return new Response(null, { status: 304, headers: { ETag: etag } });
+  }
+
   const [
     storedTheme,
     storedName,
@@ -84,7 +104,7 @@ export async function GET() {
     showOnTap: storedOnTap !== "false",
     showFermenting: storedFerm !== "false",
     showComingSoon: storedSoon !== "false",
-  });
+  }, { headers: { ETag: etag } });
 }
 
 export async function PUT(request: Request) {
